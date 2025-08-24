@@ -38,7 +38,7 @@ function MessageInput({ onSendMessage, disabled = false }) {
           onKeyDown={handleKeyDown}
           placeholder="Type your message..."
           disabled={disabled}
-          className="w-full resize-none border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full resize-none bg-gray-700 text-gray-200 placeholder-gray-500 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-600 disabled:cursor-not-allowed"
           rows="1"
           maxRows="6"
         />
@@ -47,7 +47,7 @@ function MessageInput({ onSendMessage, disabled = false }) {
       <button
         type="submit"
         disabled={!message.trim() || disabled}
-        className="bg-primary-600 text-white p-3 rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+        className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
       >
         <Send className="w-5 h-5" />
       </button>

@@ -1,13 +1,16 @@
 import React, { useRef, useEffect } from 'react'
-import { Send, Bot } from 'lucide-react'
+import { Bot, X } from 'lucide-react'
 import Message from './Message'
+import MessageInput from './MessageInput'
 
 function ChatInterface({ 
   conversation, 
   onSendMessage, 
   onBranchConversation, 
   onToggleExpansion, 
-  isLoading 
+  isLoading,
+  isBranchView = false,
+  onCloseBranch
 }) {
   const messagesEndRef = useRef(null)
 
@@ -19,16 +22,7 @@ function ChatInterface({
     scrollToBottom()
   }, [conversation?.messages])
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      const content = e.target.value.trim()
-      if (content) {
-        onSendMessage(content, 'user')
-        e.target.value = ''
-      }
-    }
-  }
+
 
   if (!conversation) {
     return (
@@ -55,13 +49,25 @@ function ChatInterface({
   return (
     <div className="flex flex-col h-full bg-gray-900 text-gray-100">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
-        <h1 className="text-lg font-semibold text-gray-100">
-          {conversation.title}
-        </h1>
-        <p className="text-sm text-gray-400">
-          {conversation.messages.length} messages
-        </p>
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-gray-100">
+            {isBranchView ? 'Branch' : conversation.title}
+          </h1>
+          <p className="text-sm text-gray-400">
+            {conversation.messages.length} messages
+            {isBranchView && ' • Branch'}
+          </p>
+        </div>
+        {isBranchView && onCloseBranch && (
+          <button
+            onClick={onCloseBranch}
+            className="text-gray-400 hover:text-gray-200 transition-colors"
+            title="Close branch"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Messages */}
@@ -78,6 +84,7 @@ function ChatInterface({
               message={message}
               onBranch={onBranchConversation}
               onToggleExpansion={onToggleExpansion}
+              isBranchView={isBranchView}
             />
           ))
         )}
@@ -101,26 +108,8 @@ function ChatInterface({
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-gray-800 border-t border-gray-700 flex items-center space-x-4">
-        <input
-          type="text"
-          placeholder="Type your message..."
-          className="flex-1 bg-gray-700 text-gray-200 placeholder-gray-500 px-4 py-2 rounded-full border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
-          onKeyDown={handleKeyDown}
-        />
-        <button
-          onClick={() => {
-            const input = document.querySelector('input[type="text"]')
-            const content = input.value.trim()
-            if (content) {
-              onSendMessage(content, 'user')
-              input.value = ''
-            }
-          }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-colors"
-        >
-          <Send className="w-5 h-5" />
-        </button>
+      <div className="p-4 bg-gray-800 border-t border-gray-700">
+        <MessageInput onSendMessage={onSendMessage} disabled={isLoading} />
       </div>
     </div>
   )

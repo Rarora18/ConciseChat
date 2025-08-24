@@ -2,7 +2,7 @@ import React from 'react'
 import { Bot, User, ChevronDown, ChevronUp, GitBranch, Clock } from 'lucide-react'
 import { formatTimestamp } from '../utils/helpers'
 
-function Message({ message, onBranch, onToggleExpansion }) {
+function Message({ message, onBranch, onToggleExpansion, isBranchView = false }) {
   const isUser = message.role === 'user'
   const hasExpandedContent = message.expandedContent && message.expandedContent !== message.content
 
@@ -71,14 +71,16 @@ function Message({ message, onBranch, onToggleExpansion }) {
                 </button>
               )}
 
-              <button
-                onClick={() => onBranch(message.id, message.content)}
-                className="flex items-center space-x-1 hover:text-primary-600 transition-colors"
-                title="Branch from this message"
-              >
-                <GitBranch className="w-3 h-3" />
-                <span>Branch</span>
-              </button>
+              {!isBranchView && (
+                <button
+                  onClick={() => onBranch(message.id, message.content)}
+                  className="flex items-center space-x-1 hover:text-primary-600 transition-colors"
+                  title="Branch from this message"
+                >
+                  <GitBranch className="w-3 h-3" />
+                  <span>Branch</span>
+                </button>
+              )}
             </>
           )}
         </div>
