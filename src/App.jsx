@@ -4,6 +4,7 @@ import { generateIntelligentResponse } from './services/aiService'
 import Sidebar from './components/Sidebar'
 import ChatInterface from './components/ChatInterface'
 import { ThemeProvider } from './contexts/ThemeContext'
+import FuturisticBackground from './components/FuturisticBackground'
 
 function App() {
   const [conversations, setConversations] = useState([])
@@ -233,9 +234,12 @@ function App() {
 
   return (
     <ThemeProvider>
-      <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden">
+      <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden relative">
+        {/* Futuristic Background Animation */}
+        <FuturisticBackground />
+        
         {/* Modern Sidebar */}
-        <div className="w-80 flex-shrink-0">
+        <div className="w-80 flex-shrink-0 relative z-10">
           <Sidebar 
             conversations={conversations}
             currentConversationId={currentConversationId}
@@ -247,7 +251,7 @@ function App() {
         {/* Main Chat Area */}
         {showSplitView ? (
           // Split view: Original chat on left, branch on right
-          <div className="flex-1 flex">
+          <div className="flex-1 flex relative z-10">
             <div className="w-1/2 border-r border-slate-200/60 dark:border-slate-700/60">
               <ChatInterface 
                 conversation={currentConversation}
@@ -272,7 +276,7 @@ function App() {
           </div>
         ) : (
           // Single view: Full width chat
-          <div className="flex-1">
+          <div className="flex-1 relative z-10">
             <ChatInterface 
               conversation={currentConversation}
               onSendMessage={sendToMainChat}

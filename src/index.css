@@ -118,6 +118,19 @@
   .scrollbar-modern::-webkit-scrollbar-thumb:hover {
     background: rgb(100 116 139);
   }
+  
+  /* Dark mode scrollbar */
+  .dark .scrollbar-modern {
+    scrollbar-color: rgb(71 85 105) transparent;
+  }
+  
+  .dark .scrollbar-modern::-webkit-scrollbar-thumb {
+    background: rgb(71 85 105);
+  }
+  
+  .dark .scrollbar-modern::-webkit-scrollbar-thumb:hover {
+    background: rgb(51 65 85);
+  }
 }
 
 @keyframes fadeIn {
@@ -157,7 +170,7 @@
 }
 
 .typing-dot {
-  @apply w-2 h-2 bg-slate-400 rounded-full;
+  @apply w-2 h-2 bg-slate-400 dark:bg-slate-500 rounded-full;
   animation: typing 1.4s infinite ease-in-out;
 }
 
