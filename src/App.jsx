@@ -3,6 +3,7 @@ import { generateId } from './utils/helpers'
 import { generateIntelligentResponse } from './services/aiService'
 import Sidebar from './components/Sidebar'
 import ChatInterface from './components/ChatInterface'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 function App() {
   const [conversations, setConversations] = useState([])
@@ -231,22 +232,47 @@ function App() {
   const showSplitView = branchConversationId && branchConversationData
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 overflow-hidden">
-      {/* Modern Sidebar */}
-      <div className="w-80 flex-shrink-0">
-        <Sidebar 
-          conversations={conversations}
-          currentConversationId={currentConversationId}
-          onConversationSelect={setCurrentConversationId}
-          onNewConversation={createNewConversation}
-        />
-      </div>
-      
-      {/* Main Chat Area */}
-      {showSplitView ? (
-        // Split view: Original chat on left, branch on right
-        <div className="flex-1 flex">
-          <div className="w-1/2 border-r border-slate-200/60">
+    <ThemeProvider>
+      <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden">
+        {/* Modern Sidebar */}
+        <div className="w-80 flex-shrink-0">
+          <Sidebar 
+            conversations={conversations}
+            currentConversationId={currentConversationId}
+            onConversationSelect={setCurrentConversationId}
+            onNewConversation={createNewConversation}
+          />
+        </div>
+        
+        {/* Main Chat Area */}
+        {showSplitView ? (
+          // Split view: Original chat on left, branch on right
+          <div className="flex-1 flex">
+            <div className="w-1/2 border-r border-slate-200/60 dark:border-slate-700/60">
+              <ChatInterface 
+                conversation={currentConversation}
+                onSendMessage={sendToMainChat}
+                onBranchConversation={branchConversation}
+                onToggleExpansion={toggleMessageExpansion}
+                isLoading={isLoading}
+                isBranchView={false}
+              />
+            </div>
+            <div className="w-1/2">
+              <ChatInterface 
+                conversation={branchConversationData}
+                onSendMessage={sendToBranchChat}
+                onBranchConversation={branchConversation}
+                onToggleExpansion={toggleMessageExpansion}
+                isLoading={branchLoading}
+                isBranchView={true}
+                onCloseBranch={closeBranch}
+              />
+            </div>
+          </div>
+        ) : (
+          // Single view: Full width chat
+          <div className="flex-1">
             <ChatInterface 
               conversation={currentConversation}
               onSendMessage={sendToMainChat}
@@ -256,32 +282,9 @@ function App() {
               isBranchView={false}
             />
           </div>
-          <div className="w-1/2">
-            <ChatInterface 
-              conversation={branchConversationData}
-              onSendMessage={sendToBranchChat}
-              onBranchConversation={branchConversation}
-              onToggleExpansion={toggleMessageExpansion}
-              isLoading={branchLoading}
-              isBranchView={true}
-              onCloseBranch={closeBranch}
-            />
-          </div>
-        </div>
-      ) : (
-        // Single view: Full width chat
-        <div className="flex-1">
-          <ChatInterface 
-            conversation={currentConversation}
-            onSendMessage={sendToMainChat}
-            onBranchConversation={branchConversation}
-            onToggleExpansion={toggleMessageExpansion}
-            isLoading={isLoading}
-            isBranchView={false}
-          />
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </ThemeProvider>
   )
 }
 

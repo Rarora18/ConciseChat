@@ -104,7 +104,7 @@ function MessageInput({ onSendMessage, disabled = false }) {
             onKeyDown={handleKeyDown}
             placeholder="Type your message or attach files..."
             disabled={disabled}
-            className="w-full resize-none bg-gray-700 text-gray-200 placeholder-gray-500 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-600 disabled:cursor-not-allowed"
+            className="w-full resize-none bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder-slate-500 dark:placeholder-slate-400 border border-slate-300 dark:border-slate-600 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 dark:disabled:bg-slate-700 disabled:cursor-not-allowed shadow-sm"
             rows="1"
           />
           
@@ -113,7 +113,7 @@ function MessageInput({ onSendMessage, disabled = false }) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors disabled:opacity-50"
             title="Attach files"
           >
             <Paperclip className="w-5 h-5" />
@@ -133,7 +133,7 @@ function MessageInput({ onSendMessage, disabled = false }) {
         <button
           type="submit"
           disabled={(!message.trim() && attachments.length === 0) || disabled}
-          className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+          className="bg-blue-600 text-white p-3 rounded-2xl hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
           <Send className="w-5 h-5" />
         </button>

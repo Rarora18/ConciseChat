@@ -55,13 +55,13 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
         w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm
         ${isUser 
           ? 'bg-gradient-to-r from-blue-500 to-indigo-500' 
-          : 'bg-gradient-to-r from-slate-100 to-slate-200 border border-slate-200'
+          : 'bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 border border-slate-200 dark:border-slate-600'
         }
       `}>
         {isUser ? (
           <User className="w-5 h-5 text-white" />
         ) : (
-          <Bot className="w-5 h-5 text-slate-600" />
+          <Bot className="w-5 h-5 text-slate-600 dark:text-slate-300" />
         )}
       </div>
 
@@ -81,23 +81,23 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
           {/* File Attachments */}
           {hasAttachments && (
             <div className="mt-4 space-y-2">
-              <div className="text-xs font-medium text-slate-600 mb-2">
+              <div className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
                 Attachments ({message.attachments.length})
               </div>
               {message.attachments.map((file, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div key={index} className="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                   <span className="text-xl">{getFileIcon(file.type)}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-slate-700 truncate">
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
                       {file.name}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
                       {formatFileSize(file.size)} • {file.type}
                     </div>
                   </div>
                   <button
                     onClick={() => handleFileDownload(file)}
-                    className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                    className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors p-1"
                     title="Download file"
                   >
                     <Download className="w-4 h-4" />
@@ -109,14 +109,14 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
           
           {/* Expanded content for AI messages */}
           {!isUser && hasExpandedContent && message.isExpanded && (
-            <div className="mt-4 pt-4 border-t border-slate-200/60">
+            <div className="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
               <div className="relative">
-                <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap font-mono bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-mono bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
                   {message.expandedContent}
                 </div>
                 <button
                   onClick={() => handleCopyContent(message.expandedContent)}
-                  className="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600 transition-colors bg-white rounded-lg border border-slate-200 shadow-sm"
+                  className="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm"
                   title="Copy content"
                 >
                   {copied ? (
@@ -134,7 +134,7 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
         <div className={`flex items-center space-x-3 mt-3 text-xs ${
           isUser ? 'justify-end' : 'justify-start'
         }`}>
-          <div className="flex items-center space-x-1 text-slate-400">
+          <div className="flex items-center space-x-1 text-slate-400 dark:text-slate-500">
             <Clock className="w-3 h-3" />
             <span>{formatTimestamp(message.timestamp)}</span>
           </div>
