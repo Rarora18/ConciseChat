@@ -1,10 +1,52 @@
-import React from 'react'
-import { Bot, User, ChevronDown, ChevronUp, GitBranch, Clock, Sparkles } from 'lucide-react'
+import React, { useState } from 'react'
+import { Bot, User, ChevronDown, ChevronUp, GitBranch, Clock, Download, Copy, Check } from 'lucide-react'
 import { formatTimestamp } from '../utils/helpers'
 
 function Message({ message, onBranch, onToggleExpansion, isBranchView = false, conversationId }) {
   const isUser = message.role === 'user'
   const hasExpandedContent = message.expandedContent && message.expandedContent !== message.content
+  const hasAttachments = message.attachments && message.attachments.length > 0
+  const [copied, setCopied] = useState(false)
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const getFileIcon = (fileType) => {
+    if (fileType.startsWith('image/')) return '🖼️'
+    if (fileType.includes('pdf')) return '📄'
+    if (fileType.includes('text') || fileType.includes('code')) return '📝'
+    if (fileType.includes('zip') || fileType.includes('rar')) return '📦'
+    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return '📊'
+    if (fileType.includes('word') || fileType.includes('document')) return '📄'
+    if (fileType.includes('powerpoint') || fileType.includes('presentation')) return '📽️'
+    return '📎'
+  }
+
+  const handleFileDownload = (file) => {
+    const url = URL.createObjectURL(file)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = file.name
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleCopyContent = async (content) => {
+    try {
+      await navigator.clipboard.writeText(content)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy:', error)
+    }
+  }
 
   return (
     <div className={`flex items-start space-x-4 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
@@ -36,11 +78,53 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
             {message.content}
           </div>
           
+          {/* File Attachments */}
+          {hasAttachments && (
+            <div className="mt-4 space-y-2">
+              <div className="text-xs font-medium text-slate-600 mb-2">
+                Attachments ({message.attachments.length})
+              </div>
+              {message.attachments.map((file, index) => (
+                <div key={index} className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <span className="text-xl">{getFileIcon(file.type)}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-slate-700 truncate">
+                      {file.name}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {formatFileSize(file.size)} • {file.type}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleFileDownload(file)}
+                    className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                    title="Download file"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          
           {/* Expanded content for AI messages */}
           {!isUser && hasExpandedContent && message.isExpanded && (
             <div className="mt-4 pt-4 border-t border-slate-200/60">
-              <div className="text-sm text-slate-700 leading-relaxed">
-                {message.expandedContent}
+              <div className="relative">
+                <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap font-mono bg-slate-50 p-4 rounded-lg border border-slate-200">
+                  {message.expandedContent}
+                </div>
+                <button
+                  onClick={() => handleCopyContent(message.expandedContent)}
+                  className="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600 transition-colors bg-white rounded-lg border border-slate-200 shadow-sm"
+                  title="Copy content"
+                >
+                  {copied ? (
+                    <Check className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             </div>
           )}

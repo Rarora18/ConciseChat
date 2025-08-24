@@ -25,7 +25,7 @@ function App() {
     setBranchConversationId(null) // Reset branching
   }, [])
 
-  const addMessage = useCallback(async (content, role = 'user', targetConversationId) => {
+  const addMessage = useCallback(async (content, role = 'user', attachments = [], targetConversationId) => {
     // Use provided target conversation ID or current conversation ID
     const actualTargetId = targetConversationId || currentConversationId
     
@@ -44,7 +44,8 @@ function App() {
       content,
       role,
       timestamp: new Date(),
-      conversationId: actualTargetId
+      conversationId: actualTargetId,
+      attachments: attachments
     }
 
     // Add the user message to the correct conversation
@@ -71,6 +72,12 @@ function App() {
       // Get the target conversation to check if it's a branch with history
       const targetConversation = conversations.find(conv => conv.id === actualTargetId)
       
+      // Process file attachments for AI analysis
+      let fileContent = ''
+      if (attachments && attachments.length > 0) {
+        fileContent = await processFileAttachments(attachments)
+      }
+      
       // For branch conversations, include conversation history in the AI response
       let aiResponse
       if (targetConversation && targetConversation.conversationHistory) {
@@ -79,11 +86,13 @@ function App() {
           .map(msg => `${msg.role}: ${msg.content}`)
           .join('\n')
         
-        // Pass context to intelligent AI response generation
-        aiResponse = await generateIntelligentResponse(content, context)
+        // Pass context and file content to intelligent AI response generation
+        const fullContent = fileContent ? `${content}\n\nAttached files:\n${fileContent}` : content
+        aiResponse = await generateIntelligentResponse(fullContent, context)
       } else {
         // Regular AI response for main conversations
-        aiResponse = await generateIntelligentResponse(content)
+        const fullContent = fileContent ? `${content}\n\nAttached files:\n${fileContent}` : content
+        aiResponse = await generateIntelligentResponse(fullContent)
       }
       
       const aiMessage = {
@@ -164,13 +173,55 @@ function App() {
     setBranchConversationId(null)
   }, [])
 
+  // Process file attachments for AI analysis
+  const processFileAttachments = async (attachments) => {
+    const fileContents = []
+    
+    for (const file of attachments) {
+      try {
+        let content = ''
+        
+        // Handle different file types
+        if (file.type.startsWith('text/') || 
+            file.type.includes('javascript') || 
+            file.type.includes('python') || 
+            file.type.includes('json') || 
+            file.type.includes('xml') || 
+            file.type.includes('csv')) {
+          // Text files - read as text
+          content = await file.text()
+        } else if (file.type.startsWith('image/')) {
+          // Images - describe the image
+          content = `[Image file: ${file.name}, Size: ${(file.size / 1024).toFixed(1)}KB, Type: ${file.type}]`
+        } else if (file.type.includes('pdf')) {
+          // PDFs - note that we can't read PDF content in browser
+          content = `[PDF file: ${file.name}, Size: ${(file.size / 1024).toFixed(1)}KB]`
+        } else if (file.type.includes('zip') || file.type.includes('rar')) {
+          // Archives
+          content = `[Archive file: ${file.name}, Size: ${(file.size / 1024).toFixed(1)}KB]`
+        } else {
+          // Other file types
+          content = `[File: ${file.name}, Size: ${(file.size / 1024).toFixed(1)}KB, Type: ${file.type}]`
+        }
+        
+        fileContents.push(`File: ${file.name}\nType: ${file.type}\nSize: ${(file.size / 1024).toFixed(1)}KB\nContent:\n${content}\n---`)
+        
+      } catch (error) {
+        console.error('Error processing file:', file.name, error)
+        fileContents.push(`File: ${file.name}\nError: Could not read file content`)
+      }
+    }
+    
+    return fileContents.join('\n\n')
+  }
+
   // Wrapper functions to send messages to specific conversations
-  const sendToMainChat = useCallback(async (content, role = 'user') => {
-    await addMessage(content, role, currentConversationId)
+  const sendToMainChat = useCallback(async (content, role = 'user', attachments = []) => {
+    await addMessage(content, role, attachments, currentConversationId)
   }, [addMessage, currentConversationId])
 
-  const sendToBranchChat = useCallback(async (content, role = 'user') => {
-    await addMessage(content, role, branchConversationId)
+  const sendToBranchChat = useCallback(async (content, role = 'user', attachments = []) => {
+    await addMessage(content, role, attachments, branchConversationId)
   }, [addMessage, branchConversationId])
 
   const currentConversation = conversations.find(conv => conv.id === currentConversationId)

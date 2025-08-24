@@ -41,75 +41,67 @@ function Sidebar({ conversations, currentConversationId, onConversationSelect, o
               <p className="text-slate-400 text-xs mt-1">Start a new chat to begin</p>
             </div>
           ) : (
-            conversations.map((conversation) => {
-              const isActive = conversation.id === currentConversationId
-              const isBranch = conversation.parentMessageId
-              
-              return (
-                <div
-                  key={conversation.id}
-                  onClick={() => onConversationSelect(conversation.id)}
-                  className={`
-                    group relative p-4 rounded-xl cursor-pointer transition-all duration-200 ease-out
-                    ${isActive 
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 shadow-sm' 
-                      : 'hover:bg-slate-50/80 border border-transparent hover:border-slate-200/60'
-                    }
-                    hover-lift
-                  `}
-                >
-                  {/* Active indicator */}
-                  {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-r-full"></div>
-                  )}
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className={`
-                      w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
+            conversations
+              .filter(conversation => !conversation.parentMessageId) // Only show main conversations, not branches
+              .map((conversation) => {
+                const isActive = conversation.id === currentConversationId
+                
+                return (
+                  <div
+                    key={conversation.id}
+                    onClick={() => onConversationSelect(conversation.id)}
+                    className={`
+                      group relative p-4 rounded-xl cursor-pointer transition-all duration-200 ease-out
                       ${isActive 
-                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' 
-                        : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 shadow-sm' 
+                        : 'hover:bg-slate-50/80 border border-transparent hover:border-slate-200/60'
                       }
-                      transition-all duration-200
-                    `}>
-                      {isBranch ? (
-                        <GitBranch className="w-5 h-5" />
-                      ) : (
-                        <MessageSquare className="w-5 h-5" />
-                      )}
-                    </div>
+                      hover-lift
+                    `}
+                  >
+                    {/* Active indicator */}
+                    {isActive && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-r-full"></div>
+                    )}
                     
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className={`
-                          font-medium truncate
-                          ${isActive ? 'text-slate-800' : 'text-slate-700'}
-                        `}>
-                          {conversation.title}
-                        </h3>
-                        {isBranch && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                            Branch
-                          </span>
-                        )}
+                    <div className="flex items-start space-x-3">
+                      <div className={`
+                        w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
+                        ${isActive 
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' 
+                          : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                        }
+                        transition-all duration-200
+                      `}>
+                        <MessageSquare className="w-5 h-5" />
                       </div>
                       
-                      <div className="flex items-center space-x-2 text-xs text-slate-500">
-                        <div className="flex items-center space-x-1">
-                          <MessageSquare className="w-3 h-3" />
-                          <span>{conversation.messages.length}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className={`
+                            font-medium truncate
+                            ${isActive ? 'text-slate-800' : 'text-slate-700'}
+                          `}>
+                            {conversation.title}
+                          </h3>
                         </div>
-                        <span>•</span>
-                        <div className="flex items-center space-x-1">
-                          <Clock className="w-3 h-3" />
-                          <span>{formatDate(conversation.updatedAt)}</span>
+                        
+                        <div className="flex items-center space-x-2 text-xs text-slate-500">
+                          <div className="flex items-center space-x-1">
+                            <MessageSquare className="w-3 h-3" />
+                            <span>{conversation.messages.length}</span>
+                          </div>
+                          <span>•</span>
+                          <div className="flex items-center space-x-1">
+                            <Clock className="w-3 h-3" />
+                            <span>{formatDate(conversation.updatedAt)}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )
-            })
+                )
+              })
           )}
         </div>
       </div>

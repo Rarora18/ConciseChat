@@ -1,15 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Send } from 'lucide-react'
+import { Send, Paperclip, X } from 'lucide-react'
 
 function MessageInput({ onSendMessage, disabled = false }) {
   const [message, setMessage] = useState('')
+  const [attachments, setAttachments] = useState([])
   const textareaRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (message.trim() && !disabled) {
-      onSendMessage(message.trim())
+    if ((message.trim() || attachments.length > 0) && !disabled) {
+      onSendMessage(message.trim(), 'user', attachments)
       setMessage('')
+      setAttachments([])
     }
   }
 
@@ -18,6 +21,41 @@ function MessageInput({ onSendMessage, disabled = false }) {
       e.preventDefault()
       handleSubmit(e)
     }
+  }
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files)
+    const validFiles = files.filter(file => {
+      // Check file size (max 10MB per file)
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File ${file.name} is too large. Maximum size is 10MB.`)
+        return false
+      }
+      return true
+    })
+    
+    setAttachments(prev => [...prev, ...validFiles])
+    e.target.value = '' // Reset input
+  }
+
+  const removeAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const getFileIcon = (fileType) => {
+    if (fileType.startsWith('image/')) return '🖼️'
+    if (fileType.includes('pdf')) return '📄'
+    if (fileType.includes('text') || fileType.includes('code')) return '📝'
+    if (fileType.includes('zip') || fileType.includes('rar')) return '📦'
+    return '📎'
   }
 
   // Auto-resize textarea
@@ -29,29 +67,78 @@ function MessageInput({ onSendMessage, disabled = false }) {
   }, [message])
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-end space-x-3">
-      <div className="flex-1 relative">
-        <textarea
-          ref={textareaRef}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your message..."
-          disabled={disabled}
-          className="w-full resize-none bg-gray-700 text-gray-200 placeholder-gray-500 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-600 disabled:cursor-not-allowed"
-          rows="1"
-          maxRows="6"
-        />
-      </div>
-      
-      <button
-        type="submit"
-        disabled={!message.trim() || disabled}
-        className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-      >
-        <Send className="w-5 h-5" />
-      </button>
-    </form>
+    <div className="space-y-3">
+      {/* File Attachments */}
+      {attachments.length > 0 && (
+        <div className="flex flex-wrap gap-2 p-3 bg-slate-100 rounded-lg border border-slate-200">
+          {attachments.map((file, index) => (
+            <div key={index} className="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg border border-slate-300 shadow-sm">
+              <span className="text-lg">{getFileIcon(file.type)}</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-medium text-slate-700 truncate max-w-32">
+                  {file.name}
+                </span>
+                <span className="text-xs text-slate-500">
+                  {formatFileSize(file.size)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => removeAttachment(index)}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Input Form */}
+      <form onSubmit={handleSubmit} className="flex items-end space-x-3">
+        <div className="flex-1 relative">
+          <textarea
+            ref={textareaRef}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your message or attach files..."
+            disabled={disabled}
+            className="w-full resize-none bg-gray-700 text-gray-200 placeholder-gray-500 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-600 disabled:cursor-not-allowed"
+            rows="1"
+          />
+          
+          {/* File Upload Button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={disabled}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
+            title="Attach files"
+          >
+            <Paperclip className="w-5 h-5" />
+          </button>
+          
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+            accept="*/*"
+          />
+        </div>
+        
+        <button
+          type="submit"
+          disabled={(!message.trim() && attachments.length === 0) || disabled}
+          className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+        >
+          <Send className="w-5 h-5" />
+        </button>
+      </form>
+    </div>
   )
 }
 
