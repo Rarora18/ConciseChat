@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react'
-import ChatInterface from './components/ChatInterface'
-import Sidebar from './components/Sidebar'
 import { generateId } from './utils/helpers'
-import { generateAIResponse } from './utils/aiResponses'
+import { generateIntelligentResponse } from './services/aiService'
+import Sidebar from './components/Sidebar'
+import ChatInterface from './components/ChatInterface'
 
 function App() {
   const [conversations, setConversations] = useState([])
@@ -25,7 +25,7 @@ function App() {
     setBranchConversationId(null) // Reset branching
   }, [])
 
-  const addMessage = useCallback((content, role = 'user', targetConversationId) => {
+  const addMessage = useCallback(async (content, role = 'user', targetConversationId) => {
     // Use provided target conversation ID or current conversation ID
     const actualTargetId = targetConversationId || currentConversationId
     
@@ -79,11 +79,11 @@ function App() {
           .map(msg => `${msg.role}: ${msg.content}`)
           .join('\n')
         
-        // Pass context to AI response generation
-        aiResponse = generateAIResponse(content, context)
+        // Pass context to intelligent AI response generation
+        aiResponse = await generateIntelligentResponse(content, context)
       } else {
         // Regular AI response for main conversations
-        aiResponse = generateAIResponse(content)
+        aiResponse = await generateIntelligentResponse(content)
       }
       
       const aiMessage = {
@@ -142,9 +142,12 @@ function App() {
     setBranchConversationId(newConversation.id) // Mark this as a branch
   }, [conversations, currentConversationId, branchConversationId])
 
-  const toggleMessageExpansion = useCallback((messageId) => {
+  const toggleMessageExpansion = useCallback((messageId, conversationId = null) => {
+    // Use provided conversationId or fall back to currentConversationId
+    const targetConversationId = conversationId || currentConversationId;
+    
     setConversations(prev => prev.map(conv => 
-      conv.id === currentConversationId 
+      conv.id === targetConversationId 
         ? {
             ...conv,
             messages: conv.messages.map(msg => 
@@ -162,12 +165,12 @@ function App() {
   }, [])
 
   // Wrapper functions to send messages to specific conversations
-  const sendToMainChat = useCallback((content, role = 'user') => {
-    addMessage(content, role, currentConversationId)
+  const sendToMainChat = useCallback(async (content, role = 'user') => {
+    await addMessage(content, role, currentConversationId)
   }, [addMessage, currentConversationId])
 
-  const sendToBranchChat = useCallback((content, role = 'user') => {
-    addMessage(content, role, branchConversationId)
+  const sendToBranchChat = useCallback(async (content, role = 'user') => {
+    await addMessage(content, role, branchConversationId)
   }, [addMessage, branchConversationId])
 
   const currentConversation = conversations.find(conv => conv.id === currentConversationId)
@@ -177,18 +180,22 @@ function App() {
   const showSplitView = branchConversationId && branchConversationData
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar 
-        conversations={conversations}
-        currentConversationId={currentConversationId}
-        onConversationSelect={setCurrentConversationId}
-        onNewConversation={createNewConversation}
-      />
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 overflow-hidden">
+      {/* Modern Sidebar */}
+      <div className="w-80 flex-shrink-0">
+        <Sidebar 
+          conversations={conversations}
+          currentConversationId={currentConversationId}
+          onConversationSelect={setCurrentConversationId}
+          onNewConversation={createNewConversation}
+        />
+      </div>
       
+      {/* Main Chat Area */}
       {showSplitView ? (
         // Split view: Original chat on left, branch on right
         <div className="flex-1 flex">
-          <div className="w-1/2 border-r border-gray-200">
+          <div className="w-1/2 border-r border-slate-200/60">
             <ChatInterface 
               conversation={currentConversation}
               onSendMessage={sendToMainChat}

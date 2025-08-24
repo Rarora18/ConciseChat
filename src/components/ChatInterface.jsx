@@ -22,22 +22,23 @@ function ChatInterface({
     scrollToBottom()
   }, [conversation?.messages])
 
-
-
   if (!conversation) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <Bot className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-600 mb-2">
-            Welcome to Concise Chat
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <Bot className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-3">
+            Welcome to Concise
           </h2>
-          <p className="text-gray-500 mb-6">
-            Start a new conversation to begin chatting with AI
+          <p className="text-slate-600 mb-8 leading-relaxed">
+            Start a new conversation to begin chatting with intelligent AI. 
+            Explore topics, ask questions, and branch into new discussions.
           </p>
           <button
             onClick={() => onSendMessage('Hello', 'user')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition-colors"
+            className="btn-primary rounded-xl px-8 py-4 text-lg font-medium hover-lift"
           >
             Start Chatting
           </button>
@@ -47,22 +48,29 @@ function ChatInterface({
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-gray-100">
+    <div className="flex flex-col h-full bg-white/50 backdrop-blur-sm">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+      <div className="glass border-b border-slate-200/60 px-6 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-gray-100">
-            {isBranchView ? 'Branch' : conversation.title}
+          <h1 className="text-lg font-semibold text-slate-800">
+            {isBranchView ? 'Branch Conversation' : conversation.title}
           </h1>
-          <p className="text-sm text-gray-400">
-            {conversation.messages.length} messages
-            {isBranchView && ' • Branch'}
+          <p className="text-sm text-slate-500 flex items-center space-x-2">
+            <span>{conversation.messages.length} messages</span>
+            {isBranchView && (
+              <>
+                <span>•</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                  Branch
+                </span>
+              </>
+            )}
           </p>
         </div>
         {isBranchView && onCloseBranch && (
           <button
             onClick={onCloseBranch}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="btn-ghost p-2 rounded-lg hover-lift"
             title="Close branch"
           >
             <X className="w-5 h-5" />
@@ -71,34 +79,39 @@ function ChatInterface({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto scrollbar-modern p-6 space-y-6">
         {conversation.messages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-8">
-            <Bot className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>No messages yet. Start the conversation!</p>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Bot className="w-8 h-8 text-slate-400" />
+            </div>
+            <p className="text-slate-500 font-medium">No messages yet</p>
+            <p className="text-slate-400 text-sm mt-1">Start the conversation below</p>
           </div>
         ) : (
-          conversation.messages.map((message) => (
-            <Message
-              key={message.id}
-              message={message}
-              onBranch={onBranchConversation}
-              onToggleExpansion={onToggleExpansion}
-              isBranchView={isBranchView}
-            />
+          conversation.messages.map((message, index) => (
+            <div key={message.id} className="slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
+              <Message
+                message={message}
+                onBranch={onBranchConversation}
+                onToggleExpansion={onToggleExpansion}
+                isBranchView={isBranchView}
+                conversationId={conversation.id}
+              />
+            </div>
           ))
         )}
         
         {isLoading && (
-          <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
-              <Bot className="w-5 h-5 text-gray-400" />
+          <div className="flex items-start space-x-4 slide-up">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+              <Bot className="w-6 h-6 text-white" />
             </div>
-            <div className="flex-1 bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="flex-1 glass rounded-2xl p-6 border border-slate-200/60">
+              <div className="typing-indicator">
+                <div className="typing-dot"></div>
+                <div className="typing-dot"></div>
+                <div className="typing-dot"></div>
               </div>
             </div>
           </div>
@@ -108,7 +121,7 @@ function ChatInterface({
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-gray-800 border-t border-gray-700">
+      <div className="glass border-t border-slate-200/60 p-6">
         <MessageInput onSendMessage={onSendMessage} disabled={isLoading} />
       </div>
     </div>
