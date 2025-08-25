@@ -1,19 +1,18 @@
 // Intelligent AI response generator with natural language understanding
-export function generateAIResponse(userMessage, context = null) {
+export function generateAIResponse(userMessage, conversationHistory = null) {
   const lowerMessage = userMessage.toLowerCase().trim();
 
   // Handle context-aware responses for branch conversations
-  if (context) {
+  if (conversationHistory && conversationHistory.length > 0) {
     // Check for questions about previous conversation
     if (lowerMessage.includes('last question') || lowerMessage.includes('what was asked') || 
         lowerMessage.includes('previous question') || lowerMessage.includes('what did i ask')) {
       
-      // Extract the last user question from context
-      const contextLines = context.split('\n');
-      const userMessages = contextLines.filter(line => line.startsWith('user:'));
+      // Extract the last user question from conversation history
+      const userMessages = conversationHistory.filter(msg => msg.role === 'user');
       
       if (userMessages.length > 0) {
-        const lastQuestion = userMessages[userMessages.length - 1].replace('user: ', '');
+        const lastQuestion = userMessages[userMessages.length - 1].content;
         return {
           short: `Your last question was: "${lastQuestion}"`,
           expanded: `Based on our conversation history, your last question was: "${lastQuestion}". This was part of the discussion we had before branching into this new conversation thread.`

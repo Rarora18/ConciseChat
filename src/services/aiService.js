@@ -17,45 +17,74 @@ const AI_CONFIG = {
   }
 };
 
+// Debug API keys (without exposing full keys)
+console.log('OpenAI API Key available:', !!AI_CONFIG.openai.apiKey);
+console.log('Gemini API Key available:', !!AI_CONFIG.gemini.apiKey);
+
 // Main AI response generator that tries real AI first, falls back to local AI
-export async function generateIntelligentResponse(userMessage, context = null) {
+export async function generateIntelligentResponse(userMessage, conversationHistory = null) {
+  console.log('Generating AI response for:', userMessage);
+  console.log('Conversation history:', conversationHistory);
+  
   try {
     // Try OpenAI ChatGPT first
     if (AI_CONFIG.openai.apiKey) {
-      const response = await callOpenAI(userMessage, context);
-      if (response) return response;
+      console.log('Trying OpenAI...');
+      const response = await callOpenAI(userMessage, conversationHistory);
+      if (response) {
+        console.log('OpenAI response:', response);
+        return response;
+      }
     }
     
     // Try Google Gemini as backup
     if (AI_CONFIG.gemini.apiKey) {
-      const response = await callGemini(userMessage, context);
-      if (response) return response;
+      console.log('Trying Gemini...');
+      const response = await callGemini(userMessage, conversationHistory);
+      if (response) {
+        console.log('Gemini response:', response);
+        return response;
+      }
     }
     
     // Fallback to local AI
-    return generateAIResponse(userMessage, context);
+    console.log('Using local AI fallback...');
+    const localResponse = generateAIResponse(userMessage, conversationHistory);
+    console.log('Local AI response:', localResponse);
+    return localResponse;
     
   } catch (error) {
     console.error('AI API Error:', error);
     // Fallback to local AI
-    return generateAIResponse(userMessage, context);
+    console.log('Error occurred, using local AI fallback...');
+    const localResponse = generateAIResponse(userMessage, conversationHistory);
+    console.log('Local AI fallback response:', localResponse);
+    return localResponse;
   }
 }
 
 // OpenAI ChatGPT integration
-async function callOpenAI(userMessage, context = null) {
+async function callOpenAI(userMessage, conversationHistory = null) {
   try {
     const messages = [];
     
-    // Add context if available
-    if (context) {
-      messages.push({
-        role: 'system',
-        content: `You are a helpful AI assistant. Here's the conversation context: ${context}`
+    // Add system message
+    messages.push({
+      role: 'system',
+      content: 'You are a helpful AI assistant. Provide concise answers by default, but be ready to expand when asked for more details.'
+    });
+    
+    // Add conversation history if available
+    if (conversationHistory && conversationHistory.length > 0) {
+      conversationHistory.forEach(msg => {
+        messages.push({
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        });
       });
     }
     
-    // Add user message
+    // Add current user message
     messages.push({
       role: 'user',
       content: userMessage
@@ -98,14 +127,20 @@ async function callOpenAI(userMessage, context = null) {
 }
 
 // Google Gemini integration
-async function callGemini(userMessage, context = null) {
+async function callGemini(userMessage, conversationHistory = null) {
   try {
-    let prompt = userMessage;
+    let prompt = 'You are a helpful AI assistant. Provide concise answers by default, but be ready to expand when asked for more details.\n\n';
     
-    // Add context if available
-    if (context) {
-      prompt = `Context: ${context}\n\nUser: ${userMessage}`;
+    // Add conversation history if available
+    if (conversationHistory && conversationHistory.length > 0) {
+      conversationHistory.forEach(msg => {
+        prompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
+      });
+      prompt += '\n';
     }
+    
+    // Add current user message
+    prompt += `User: ${userMessage}`;
 
     const response = await fetch(`${AI_CONFIG.gemini.endpoint}?key=${AI_CONFIG.gemini.apiKey}`, {
       method: 'POST',
@@ -148,6 +183,6 @@ async function callGemini(userMessage, context = null) {
 }
 
 // Local AI fallback with improved responses
-export function generateLocalResponse(userMessage, context = null) {
-  return generateAIResponse(userMessage, context);
+export function generateLocalResponse(userMessage, conversationHistory = null) {
+  return generateAIResponse(userMessage, conversationHistory);
 }

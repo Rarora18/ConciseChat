@@ -80,47 +80,81 @@ function App() {
         fileContent = await processFileAttachments(attachments)
       }
       
-      // For branch conversations, include conversation history in the AI response
-      let aiResponse
-      if (targetConversation && targetConversation.conversationHistory) {
-        // Create context from conversation history
-        const context = targetConversation.conversationHistory
-          .map(msg => `${msg.role}: ${msg.content}`)
-          .join('\n')
+      // Prepare conversation history for AI context
+      let conversationHistory = null
+      if (targetConversation) {
+        // For main conversations, use all previous messages
+        if (!targetConversation.parentMessageId) {
+          conversationHistory = targetConversation.messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
+        } else {
+          // For branch conversations, use the stored conversation history (up to branching point)
+          conversationHistory = targetConversation.conversationHistory?.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })) || []
+        }
+      }
+      
+      try {
+        // Generate AI response with conversation history
+        const fullContent = fileContent ? `${content}\n\nAttached files:\n${fileContent}` : content
+        const aiResponse = await generateIntelligentResponse(fullContent, conversationHistory)
         
-        // Pass context and file content to intelligent AI response generation
-        const fullContent = fileContent ? `${content}\n\nAttached files:\n${fileContent}` : content
-        aiResponse = await generateIntelligentResponse(fullContent, context)
-      } else {
-        // Regular AI response for main conversations
-        const fullContent = fileContent ? `${content}\n\nAttached files:\n${fileContent}` : content
-        aiResponse = await generateIntelligentResponse(fullContent)
-      }
-      
-      const aiMessage = {
-        id: generateId(),
-        content: aiResponse.short,
-        role: 'assistant',
-        timestamp: new Date(),
-        conversationId: actualTargetId,
-        expandedContent: aiResponse.expanded
-      }
+        if (!aiResponse || !aiResponse.short) {
+          throw new Error('Invalid AI response received')
+        }
+        
+        const aiMessage = {
+          id: generateId(),
+          content: aiResponse.short,
+          role: 'assistant',
+          timestamp: new Date(),
+          conversationId: actualTargetId,
+          expandedContent: aiResponse.expanded
+        }
 
-      setConversations(prev => prev.map(conv => 
-        conv.id === actualTargetId 
-          ? { 
-              ...conv, 
-              messages: [...conv.messages, aiMessage],
-              updatedAt: new Date()
-            }
-          : conv
-      ))
-      
-      // Clear loading state based on which conversation was updated
-      if (actualTargetId === currentConversationId) {
-        setIsLoading(false)
-      } else if (actualTargetId === branchConversationId) {
-        setBranchLoading(false)
+        setConversations(prev => prev.map(conv => 
+          conv.id === actualTargetId 
+            ? { 
+                ...conv, 
+                messages: [...conv.messages, aiMessage],
+                updatedAt: new Date()
+              }
+            : conv
+        ))
+        
+      } catch (error) {
+        console.error('Error generating AI response:', error)
+        
+        // Add error message to conversation
+        const errorMessage = {
+          id: generateId(),
+          content: 'Sorry, I encountered an error while processing your request. Please try again.',
+          role: 'assistant',
+          timestamp: new Date(),
+          conversationId: actualTargetId,
+          expandedContent: 'Sorry, I encountered an error while processing your request. Please try again.'
+        }
+        
+        setConversations(prev => prev.map(conv => 
+          conv.id === actualTargetId 
+            ? { 
+                ...conv, 
+                messages: [...conv.messages, errorMessage],
+                updatedAt: new Date()
+              }
+            : conv
+        ))
+      } finally {
+        // Always clear loading state
+        if (actualTargetId === currentConversationId) {
+          setIsLoading(false)
+        } else if (actualTargetId === branchConversationId) {
+          setBranchLoading(false)
+        }
       }
     }
   }, [conversations, currentConversationId, branchConversationId, createNewConversation])
