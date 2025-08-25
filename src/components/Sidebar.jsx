@@ -10,15 +10,15 @@ function Sidebar({ conversations, currentConversationId, onConversationSelect, o
   return (
     <div className="h-full glass border-r border-slate-200/60 dark:border-slate-700/60 flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-slate-200/60 dark:border-slate-700/60">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
-            Concise
-          </h1>
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-semibold text-sm">C</span>
+              <div className="p-6 border-b border-slate-200/60 dark:border-slate-700/60">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
+              Concise
+            </h1>
+                              <div className="w-16 h-16 flex items-center justify-center">
+                    <img src="/favicon.png" alt="Concise" className="w-12 h-12 dark:invert dark:brightness-0 dark:contrast-200" />
+                  </div>
           </div>
-        </div>
         <p className="text-slate-600 dark:text-slate-400 text-sm">
           Intelligent conversations with branching
         </p>

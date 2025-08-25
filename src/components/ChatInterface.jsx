@@ -26,10 +26,10 @@ function ChatInterface({
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <Bot className="w-10 h-10 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+                                                          <div className="w-48 h-30 flex items-center justify-center mx-auto mb-4">
+                    <img src="/favicon.png" alt="Concise" className="w-32 h-32 dark:invert dark:brightness-0 dark:contrast-200" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-3">
             Welcome to Concise
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
