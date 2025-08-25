@@ -87,25 +87,30 @@ function Sidebar({ conversations, currentConversationId, onConversationSelect, o
                 <p className="text-slate-500 text-sm">No conversations yet</p>
                 <p className="text-slate-400 text-xs mt-1">Start a new chat to begin</p>
               </div>
-            ) : (
-              conversations
-                .filter(conversation => !conversation.parentMessageId) // Only show main conversations, not branches
-                .map((conversation) => {
-                  const isActive = conversation.id === currentConversationId
-                  
-                  return (
-                    <div
-                      key={conversation.id}
-                      onClick={() => onConversationSelect(conversation.id)}
-                      className={`
-                        group relative p-4 rounded-xl cursor-pointer transition-all duration-200 ease-out
-                        ${isActive 
-                          ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 shadow-sm' 
-                          : 'hover:bg-slate-50/80 border border-transparent hover:border-slate-200/60'
-                        }
-                        hover-lift
-                      `}
-                    >
+                                                    ) : (
+                      conversations.map((conversation) => {
+                        const isBranch = conversation.parentMessageId
+                        const isActive = conversation.id === currentConversationId
+                        
+                        // Skip if this is a branch but we're not showing diagram
+                        if (isBranch && !showDiagram) return null
+                        
+                                                return (
+                          <div
+                            key={conversation.id}
+                            onClick={() => onConversationSelect(conversation.id)}
+                            className={`
+                              group relative p-4 rounded-xl cursor-pointer transition-all duration-200 ease-out
+                              ${isBranch ? 'ml-4 mr-2' : ''}
+                              ${isActive 
+                                ? isBranch 
+                                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/60 shadow-sm' 
+                                  : 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 shadow-sm'
+                                : 'hover:bg-slate-50/80 border border-transparent hover:border-slate-200/60'
+                              }
+                              hover-lift
+                            `}
+                          >
                       {/* Active indicator */}
                       {isActive && (
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-r-full"></div>
@@ -115,12 +120,18 @@ function Sidebar({ conversations, currentConversationId, onConversationSelect, o
                         <div className={`
                           w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
                           ${isActive 
-                            ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' 
+                            ? isBranch
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                              : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' 
                             : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
                           }
                           transition-all duration-200
                         `}>
-                          <MessageSquare className="w-5 h-5" />
+                          {isBranch ? (
+                            <GitBranch className="w-5 h-5" />
+                          ) : (
+                            <MessageSquare className="w-5 h-5" />
+                          )}
                         </div>
                         
                         <div className="flex-1 min-w-0">

@@ -74,9 +74,9 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
             : 'chat-message-assistant'
           }
         `}>
-          <div className="text-sm leading-relaxed">
-            {message.content}
-          </div>
+                            <div className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+                    {message.content}
+                  </div>
           
           {/* File Attachments */}
           {hasAttachments && (
