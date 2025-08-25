@@ -71,7 +71,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
     // Add system message
     messages.push({
       role: 'system',
-      content: 'You are a helpful AI assistant. Provide concise answers by default, but be ready to expand when asked for more details.'
+      content: 'You are a helpful AI assistant. Provide comprehensive, detailed answers that thoroughly explain concepts. Include examples, step-by-step explanations, and relevant details. Your responses should be educational and informative, similar to ChatGPT.'
     });
     
     // Add conversation history if available
@@ -99,7 +99,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
       body: JSON.stringify({
         model: AI_CONFIG.openai.model,
         messages: messages,
-        max_tokens: 500,
+        max_tokens: 1500,
         temperature: 0.7
       })
     });
@@ -129,7 +129,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
 // Google Gemini integration
 async function callGemini(userMessage, conversationHistory = null) {
   try {
-    let prompt = 'You are a helpful AI assistant. Provide concise answers by default, but be ready to expand when asked for more details.\n\n';
+    let prompt = 'You are a helpful AI assistant. Provide comprehensive, detailed answers that thoroughly explain concepts. Include examples, step-by-step explanations, and relevant details. Your responses should be educational and informative, similar to ChatGPT.\n\n';
     
     // Add conversation history if available
     if (conversationHistory && conversationHistory.length > 0) {
@@ -154,7 +154,7 @@ async function callGemini(userMessage, conversationHistory = null) {
           }]
         }],
         generationConfig: {
-          maxOutputTokens: 500,
+          maxOutputTokens: 1500,
           temperature: 0.7
         }
       })

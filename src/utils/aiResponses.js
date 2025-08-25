@@ -80,14 +80,81 @@ export function generateAIResponse(userMessage, conversationHistory = null) {
       keywords: ['neural', 'network', 'neural net', 'ai brain', 'machine brain'],
       response: {
         short: 'Neural networks are computing systems inspired by biological brains.',
-        expanded: 'Neural networks are computing systems inspired by biological brains. They consist of interconnected nodes (neurons) that process information. Each connection has a weight that adjusts during training. Neural networks can learn patterns from data and make predictions or classifications. They\'re fundamental to modern AI and machine learning.'
+        expanded: `# Neural Networks
+
+Neural networks are computing systems inspired by biological brains that can learn and make intelligent decisions.
+
+## How They Work:
+- **Neurons**: Individual processing units that receive inputs and produce outputs
+- **Connections**: Weights between neurons that determine signal strength
+- **Layers**: Input layer receives data, hidden layers process it, output layer produces results
+
+## Key Components:
+- **Activation Functions**: Determine neuron output (ReLU, Sigmoid, Tanh)
+- **Backpropagation**: Learning algorithm that adjusts weights based on errors
+- **Training Data**: Examples used to teach the network patterns
+
+## Applications:
+- Image and speech recognition
+- Natural language processing
+- Medical diagnosis
+- Financial forecasting
+- Autonomous vehicles
+
+## Types:
+- **Feedforward**: Information flows in one direction
+- **Recurrent**: Have memory of previous inputs
+- **Convolutional**: Specialized for image processing
+- **Transformer**: Advanced architecture for language tasks
+
+Neural networks are fundamental to modern AI and have revolutionized fields like computer vision, natural language processing, and robotics.`
       }
     },
     'machine learning': {
       keywords: ['machine learning', 'ml', 'ai learning', 'computer learning', 'algorithm learning'],
       response: {
         short: 'Machine learning is AI that learns from data without explicit programming.',
-        expanded: 'Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. It uses algorithms to identify patterns in data and make predictions or decisions. Common types include supervised learning, unsupervised learning, and reinforcement learning.'
+        expanded: `# Machine Learning
+
+Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed.
+
+## Core Concept:
+Instead of following rigid rules, ML algorithms identify patterns in data to make predictions or decisions. The more data they process, the better they become.
+
+## Types of Machine Learning:
+
+### Supervised Learning:
+- **Definition**: Learning from labeled training data
+- **Examples**: Classification, regression
+- **Use Cases**: Spam detection, house price prediction
+- **Algorithms**: Linear regression, decision trees, neural networks
+
+### Unsupervised Learning:
+- **Definition**: Finding patterns in unlabeled data
+- **Examples**: Clustering, dimensionality reduction
+- **Use Cases**: Customer segmentation, anomaly detection
+- **Algorithms**: K-means, principal component analysis
+
+### Reinforcement Learning:
+- **Definition**: Learning through trial and error with rewards
+- **Examples**: Game playing, robotics
+- **Use Cases**: Autonomous vehicles, game AI
+- **Algorithms**: Q-learning, policy gradients
+
+## Applications:
+- **Healthcare**: Disease diagnosis, drug discovery
+- **Finance**: Fraud detection, algorithmic trading
+- **E-commerce**: Recommendation systems, demand forecasting
+- **Transportation**: Self-driving cars, route optimization
+- **Entertainment**: Content recommendation, gaming AI
+
+## Key Challenges:
+- **Data Quality**: Garbage in, garbage out
+- **Overfitting**: Model memorizes training data
+- **Bias**: Unfair predictions based on training data
+- **Interpretability**: Understanding model decisions
+
+Machine learning is transforming industries and creating new possibilities for automation and intelligent decision-making.`
       }
     },
     'artificial intelligence': {
