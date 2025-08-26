@@ -4,7 +4,7 @@ import { formatDate } from '../utils/helpers'
 import ConversationDiagram from './ConversationDiagram'
 import { useTheme } from '../contexts/ThemeContext'
 
-function Sidebar({ conversations, currentConversationId, onConversationSelect, onNewConversation, onDeleteConversation }) {
+function Sidebar({ conversations, currentConversationId, onConversationSelect, onNewConversation, onDeleteConversation, onToggleSidebar }) {
   const [showDiagram, setShowDiagram] = useState(false)
   const [collapsedConversations, setCollapsedConversations] = useState(new Set())
   const [deleteDialog, setDeleteDialog] = useState({ show: false, conversation: null, isMain: false })
@@ -48,12 +48,18 @@ function Sidebar({ conversations, currentConversationId, onConversationSelect, o
       {/* Header */}
               <div className="p-6 border-b border-slate-200/60 dark:border-slate-700/60">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
-              Concise
-            </h1>
-                              <div className="w-16 h-16 flex items-center justify-center">
-                    <img src="/favicon.png" alt="Concise" className="w-12 h-12 dark:invert dark:brightness-0 dark:contrast-200" />
-                  </div>
+            <div className="flex items-center justify-center">
+              <img src="/favicon.png" alt="Concise" className="w-16 h-16 dark:invert dark:brightness-0 dark:contrast-200" />
+            </div>
+            {onToggleSidebar && (
+              <button
+                onClick={onToggleSidebar}
+                className="p-2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                title="Hide sidebar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         <p className="text-slate-600 dark:text-slate-400 text-sm">
           Intelligent conversations with branching

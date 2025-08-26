@@ -14,6 +14,7 @@ function App() {
   const [branchLoading, setBranchLoading] = useState(false)
   const [splitPosition, setSplitPosition] = useState(50) // Percentage for split position
   const [isDragging, setIsDragging] = useState(false)
+  const [sidebarVisible, setSidebarVisible] = useState(true)
   const containerRef = useRef(null)
 
   const createNewConversation = useCallback(() => {
@@ -287,6 +288,10 @@ function App() {
     }
   }, [isDragging, handleMouseMove, handleMouseUp])
 
+  const toggleSidebar = useCallback(() => {
+    setSidebarVisible(prev => !prev)
+  }, [])
+
   // Process file attachments for AI analysis
   const processFileAttachments = async (attachments) => {
     const fileContents = []
@@ -351,15 +356,36 @@ function App() {
         <FuturisticBackground />
         
         {/* Modern Sidebar */}
-        <div className="w-80 flex-shrink-0 relative z-10">
-          <Sidebar 
-            conversations={conversations}
-            currentConversationId={currentConversationId}
-            onConversationSelect={setCurrentConversationId}
-            onNewConversation={createNewConversation}
-            onDeleteConversation={deleteConversation}
-          />
-        </div>
+        {sidebarVisible && (
+          <div className="w-80 flex-shrink-0 relative z-10">
+            <Sidebar 
+              conversations={conversations}
+              currentConversationId={currentConversationId}
+              onConversationSelect={setCurrentConversationId}
+              onNewConversation={createNewConversation}
+              onDeleteConversation={deleteConversation}
+              onToggleSidebar={toggleSidebar}
+            />
+          </div>
+        )}
+        
+        {/* Sidebar Toggle Button - Only when sidebar is hidden */}
+        {!sidebarVisible && (
+          <button
+            onClick={toggleSidebar}
+            className="fixed top-4 left-4 z-20 p-2 rounded-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/60 shadow-lg hover:shadow-xl transition-all duration-200"
+            title="Show sidebar"
+          >
+            <svg 
+              className="w-5 h-5 text-slate-600 dark:text-slate-300 transition-transform duration-200" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        )}
         
         {/* Main Chat Area */}
         {showSplitView ? (
