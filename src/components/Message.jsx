@@ -48,6 +48,93 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
     }
   }
 
+  const formatExpandedContent = (content) => {
+    if (!content) return content
+    
+    // Split content into lines
+    const lines = content.split('\n')
+    
+    return lines.map((line, index) => {
+      const trimmedLine = line.trim()
+      
+      // Main headings (lines that start with #)
+      if (trimmedLine.startsWith('#')) {
+        const level = trimmedLine.match(/^#+/)[0].length
+        const text = trimmedLine.replace(/^#+\s*/, '')
+        
+        if (level === 1) {
+          return (
+            <div key={index} className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 mt-6 first:mt-0 border-b border-slate-300 dark:border-slate-600 pb-2">
+              {text}
+            </div>
+          )
+        } else if (level === 2) {
+          return (
+            <div key={index} className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 mt-5">
+              {text}
+            </div>
+          )
+        } else {
+          return (
+            <div key={index} className="text-base font-medium text-slate-800 dark:text-slate-200 mb-2 mt-4">
+              {text}
+            </div>
+          )
+        }
+      }
+      
+      // Bold text (wrapped in **)
+      if (trimmedLine.includes('**')) {
+        const parts = trimmedLine.split(/(\*\*.*?\*\*)/g)
+        return (
+          <div key={index} className="text-sm text-slate-700 dark:text-slate-300 mb-2 leading-relaxed">
+            {parts.map((part, partIndex) => {
+              if (part.startsWith('**') && part.endsWith('**')) {
+                return (
+                  <span key={partIndex} className="font-bold text-slate-900 dark:text-slate-100">
+                    {part.slice(2, -2)}
+                  </span>
+                )
+              }
+              return part
+            })}
+          </div>
+        )
+      }
+      
+      // Bullet points or numbered lists
+      if (trimmedLine.match(/^[\-\*•]\s/) || trimmedLine.match(/^\d+\.\s/)) {
+        return (
+          <div key={index} className="text-sm text-slate-700 dark:text-slate-300 mb-1 ml-4 flex items-start">
+            <span className="mr-2 text-slate-500">•</span>
+            <span>{trimmedLine.replace(/^[\-\*•]\s/, '').replace(/^\d+\.\s/, '')}</span>
+          </div>
+        )
+      }
+      
+      // Code blocks (lines wrapped in backticks)
+      if (trimmedLine.startsWith('```') || trimmedLine.startsWith('    ') || trimmedLine.startsWith('\t')) {
+        return (
+          <div key={index} className="text-sm font-mono bg-slate-200 dark:bg-slate-700 p-3 rounded mb-3 border-l-4 border-blue-500">
+            {trimmedLine.replace(/^```/, '').replace(/```$/, '').replace(/^    /, '')}
+          </div>
+        )
+      }
+      
+      // Regular paragraphs
+      if (trimmedLine.length > 0) {
+        return (
+          <div key={index} className="text-sm text-slate-700 dark:text-slate-300 mb-3 leading-relaxed">
+            {trimmedLine}
+          </div>
+        )
+      }
+      
+      // Empty lines
+      return <div key={index} className="h-3"></div>
+    })
+  }
+
   return (
     <div className={`flex items-start space-x-4 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
       {/* Avatar */}
@@ -111,8 +198,8 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
           {!isUser && hasExpandedContent && message.isExpanded && (
             <div className="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
               <div className="relative">
-                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-mono bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-                  {message.expandedContent}
+                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                  {formatExpandedContent(message.expandedContent)}
                 </div>
                 <button
                   onClick={() => handleCopyContent(message.expandedContent)}

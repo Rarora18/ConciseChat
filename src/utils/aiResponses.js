@@ -161,7 +161,35 @@ Machine learning is transforming industries and creating new possibilities for a
       keywords: ['artificial intelligence', 'ai', 'smart computer', 'intelligent machine', 'computer intelligence'],
       response: {
         short: 'AI is technology that enables machines to simulate human intelligence.',
-        expanded: 'Artificial Intelligence (AI) is technology that enables machines to simulate human intelligence. It includes machine learning, natural language processing, computer vision, and robotics. AI can perform tasks like recognizing speech, making decisions, and solving problems that typically require human intelligence.'
+        expanded: `# Artificial Intelligence
+
+Artificial Intelligence (AI) is technology that enables machines to simulate human intelligence and perform tasks that typically require human cognitive abilities.
+
+## Core Components:
+- **Machine Learning**: Algorithms that learn from data
+- **Natural Language Processing**: Understanding and generating human language
+- **Computer Vision**: Interpreting visual information
+- **Robotics**: Physical systems that interact with the environment
+
+## Key Capabilities:
+- **Pattern Recognition**: Identifying complex patterns in data
+- **Decision Making**: Making informed choices based on information
+- **Problem Solving**: Finding solutions to complex problems
+- **Language Understanding**: Processing and generating human language
+
+## Applications:
+- **Healthcare**: Medical diagnosis, drug discovery, patient care
+- **Finance**: Fraud detection, algorithmic trading, risk assessment
+- **Transportation**: Self-driving vehicles, traffic optimization
+- **Entertainment**: Gaming AI, content recommendation, virtual assistants
+- **Education**: Personalized learning, automated grading, tutoring
+
+## Types of AI:
+- **Narrow AI**: Specialized for specific tasks
+- **General AI**: Human-level intelligence across all domains
+- **Superintelligent AI**: Surpassing human intelligence
+
+AI is transforming industries and creating new possibilities for automation, efficiency, and innovation.`
       }
     },
     'deep learning': {
@@ -177,7 +205,37 @@ Machine learning is transforming industries and creating new possibilities for a
       keywords: ['python', 'py', 'python programming'],
       response: {
         short: 'Python is a high-level, interpreted programming language.',
-        expanded: 'Python is a high-level, interpreted programming language known for its simplicity and readability. It\'s widely used in web development, data science, artificial intelligence, automation, and scientific computing. Python has a large standard library and extensive third-party packages.'
+        expanded: `# Python Programming Language
+
+Python is a high-level, interpreted programming language known for its simplicity, readability, and versatility.
+
+## Key Features:
+- **Readable Syntax**: Clean, English-like code structure
+- **Interpreted**: No compilation step required
+- **Cross-Platform**: Runs on Windows, macOS, and Linux
+- **Large Ecosystem**: Extensive libraries and frameworks
+
+## Popular Applications:
+- **Web Development**: Django, Flask, FastAPI
+- **Data Science**: Pandas, NumPy, Matplotlib
+- **Machine Learning**: TensorFlow, PyTorch, Scikit-learn
+- **Automation**: Scripting, task automation
+- **Scientific Computing**: Research, analysis, modeling
+
+## Core Strengths:
+- **Beginner-Friendly**: Excellent for learning programming
+- **Rapid Development**: Quick prototyping and development
+- **Community Support**: Large, active developer community
+- **Extensive Libraries**: Rich ecosystem of packages
+
+## Example Code:
+    # Simple Python example
+    def greet(name):
+        return f"Hello, {name}!"
+    
+    print(greet("World"))
+
+Python is one of the most popular programming languages worldwide, especially in data science, AI, and web development.`
       }
     },
     'javascript': {
