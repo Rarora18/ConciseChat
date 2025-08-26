@@ -209,6 +209,43 @@ function App() {
     setBranchConversationId(null)
   }, [])
 
+  const deleteConversation = useCallback((conversationId, isMain) => {
+    setConversations(prev => {
+      if (isMain) {
+        // Delete main conversation and all its branches
+        return prev.filter(conv => {
+          if (conv.id === conversationId) return false
+          if (conv.parentMessageId) {
+            // Check if this branch belongs to the main conversation being deleted
+            const mainConv = prev.find(main => main.id === conversationId)
+            if (mainConv && mainConv.messages.some(msg => msg.id === conv.parentMessageId)) {
+              return false
+            }
+          }
+          return true
+        })
+      } else {
+        // Delete only the branch
+        return prev.filter(conv => conv.id !== conversationId)
+      }
+    })
+
+    // If we're deleting the current conversation, select a new one
+    if (conversationId === currentConversationId) {
+      const remainingConversations = conversations.filter(conv => conv.id !== conversationId)
+      if (remainingConversations.length > 0) {
+        setCurrentConversationId(remainingConversations[0].id)
+      } else {
+        setCurrentConversationId(null)
+      }
+    }
+
+    // If we're deleting the branch conversation, close the branch view
+    if (conversationId === branchConversationId) {
+      setBranchConversationId(null)
+    }
+  }, [conversations, currentConversationId, branchConversationId])
+
   // Process file attachments for AI analysis
   const processFileAttachments = async (attachments) => {
     const fileContents = []
@@ -279,6 +316,7 @@ function App() {
             currentConversationId={currentConversationId}
             onConversationSelect={setCurrentConversationId}
             onNewConversation={createNewConversation}
+            onDeleteConversation={deleteConversation}
           />
         </div>
         
