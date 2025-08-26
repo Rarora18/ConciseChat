@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { generateId } from './utils/helpers'
 import { generateIntelligentResponse } from './services/aiService'
 import Sidebar from './components/Sidebar'
@@ -12,6 +12,9 @@ function App() {
   const [branchConversationId, setBranchConversationId] = useState(null) // Track the branch conversation
   const [isLoading, setIsLoading] = useState(false)
   const [branchLoading, setBranchLoading] = useState(false)
+  const [splitPosition, setSplitPosition] = useState(50) // Percentage for split position
+  const [isDragging, setIsDragging] = useState(false)
+  const containerRef = useRef(null)
 
   const createNewConversation = useCallback(() => {
     const newConversation = {
@@ -246,6 +249,44 @@ function App() {
     }
   }, [conversations, currentConversationId, branchConversationId])
 
+  // Drag handlers for split view
+  const handleMouseDown = useCallback((e) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }, [])
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging || !containerRef.current) return
+
+    const containerRect = containerRef.current.getBoundingClientRect()
+    const newPosition = ((e.clientX - containerRect.left) / containerRect.width) * 100
+    
+    // Limit the split position between 20% and 80%
+    const clampedPosition = Math.max(20, Math.min(80, newPosition))
+    setSplitPosition(clampedPosition)
+  }, [isDragging])
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  // Add global mouse event listeners
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+      }
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp])
+
   // Process file attachments for AI analysis
   const processFileAttachments = async (attachments) => {
     const fileContents = []
@@ -323,8 +364,11 @@ function App() {
         {/* Main Chat Area */}
         {showSplitView ? (
           // Split view: Original chat on left, branch on right
-          <div className="flex-1 flex relative z-10">
-            <div className="w-1/2 border-r border-slate-200/60 dark:border-slate-700/60">
+          <div ref={containerRef} className="flex-1 flex relative z-10">
+            <div 
+              className="border-r border-slate-200/60 dark:border-slate-700/60"
+              style={{ width: `${splitPosition}%` }}
+            >
               <ChatInterface 
                 conversation={currentConversation}
                 onSendMessage={sendToMainChat}
@@ -334,7 +378,21 @@ function App() {
                 isBranchView={false}
               />
             </div>
-            <div className="w-1/2">
+            
+            {/* Draggable Divider */}
+            <div
+              className="w-1 bg-slate-300 dark:bg-slate-600 hover:bg-blue-500 dark:hover:bg-blue-400 cursor-col-resize relative group"
+              onMouseDown={handleMouseDown}
+            >
+              {/* Divider Handle */}
+              <div className="absolute inset-y-0 -left-1 -right-1 flex items-center justify-center">
+                <div className="w-1 h-8 bg-slate-400 dark:bg-slate-500 rounded-full group-hover:bg-blue-500 dark:group-hover:bg-blue-400 transition-colors"></div>
+              </div>
+            </div>
+            
+            <div 
+              style={{ width: `${100 - splitPosition}%` }}
+            >
               <ChatInterface 
                 conversation={branchConversationData}
                 onSendMessage={sendToBranchChat}
