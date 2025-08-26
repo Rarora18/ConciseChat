@@ -1,5 +1,44 @@
 // AI Service for integrating with real AI models
-import { generateAIResponse } from '../utils/aiResponses.js';
+
+// Function to create better short responses
+function createBetterShortResponse(fullResponse) {
+  // Remove markdown formatting for short response
+  let cleanResponse = fullResponse
+    .replace(/#{1,6}\s+/g, '') // Remove headers
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+    .replace(/`(.*?)`/g, '$1') // Remove code blocks
+    .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+    .trim();
+  
+  // Split into sentences
+  const sentences = cleanResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  
+  if (sentences.length === 0) {
+    return fullResponse.substring(0, 100) + (fullResponse.length > 100 ? '...' : '');
+  }
+  
+  // Take first 2-3 sentences for better context
+  let shortResponse = '';
+  let totalLength = 0;
+  const maxLength = 200; // Maximum characters for short response
+  
+  for (let i = 0; i < Math.min(3, sentences.length); i++) {
+    const sentence = sentences[i].trim();
+    if (totalLength + sentence.length + 2 <= maxLength) {
+      shortResponse += (shortResponse ? '. ' : '') + sentence;
+      totalLength += sentence.length + 2;
+    } else {
+      break;
+    }
+  }
+  
+  // Add period if missing
+  if (shortResponse && !shortResponse.endsWith('.') && !shortResponse.endsWith('!') && !shortResponse.endsWith('?')) {
+    shortResponse += '.';
+  }
+  
+  return shortResponse || fullResponse.substring(0, 150) + '...';
+}
 
 // Configuration for different AI providers
 const AI_CONFIG = {
@@ -9,9 +48,15 @@ const AI_CONFIG = {
     endpoint: 'https://api.openai.com/v1/chat/completions',
     model: 'gpt-3.5-turbo'
   },
-  // Google Gemini
+  // Google Gemini (Primary)
   gemini: {
     apiKey: import.meta.env.VITE_GEMINI_API_KEY,
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+    model: 'gemini-1.5-flash'
+  },
+  // Google Gemini (Backup)
+  geminiBackup: {
+    apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
     model: 'gemini-1.5-flash'
   }
@@ -20,6 +65,7 @@ const AI_CONFIG = {
 // Debug API keys (without exposing full keys)
 console.log('OpenAI API Key available:', !!AI_CONFIG.openai.apiKey);
 console.log('Gemini API Key available:', !!AI_CONFIG.gemini.apiKey);
+console.log('Gemini Backup API Key available:', !!AI_CONFIG.geminiBackup.apiKey);
 
 // Main AI response generator that tries real AI first, falls back to local AI
 export async function generateIntelligentResponse(userMessage, conversationHistory = null) {
@@ -37,29 +83,43 @@ export async function generateIntelligentResponse(userMessage, conversationHisto
       }
     }
     
-    // Try Google Gemini as backup
+    // Try Google Gemini (Primary)
     if (AI_CONFIG.gemini.apiKey) {
-      console.log('Trying Gemini...');
-      const response = await callGemini(userMessage, conversationHistory);
-      if (response) {
-        console.log('Gemini response:', response);
-        return response;
+      console.log('Trying Gemini (Primary)...');
+      try {
+        const response = await callGemini(userMessage, conversationHistory, AI_CONFIG.gemini);
+        if (response) {
+          console.log('Gemini (Primary) response:', response);
+          return response;
+        }
+      } catch (error) {
+        console.error('Gemini (Primary) API failed:', error.message);
+        // Try backup API key
       }
     }
     
-    // Fallback to local AI
-    console.log('Using local AI fallback...');
-    const localResponse = generateAIResponse(userMessage, conversationHistory);
-    console.log('Local AI response:', localResponse);
-    return localResponse;
+    // Try Google Gemini (Backup)
+    if (AI_CONFIG.geminiBackup.apiKey) {
+      console.log('Trying Gemini (Backup)...');
+      try {
+        const response = await callGemini(userMessage, conversationHistory, AI_CONFIG.geminiBackup);
+        if (response) {
+          console.log('Gemini (Backup) response:', response);
+          return response;
+        }
+      } catch (error) {
+        console.error('Gemini (Backup) API failed:', error.message);
+        // Continue to error handling below
+      }
+    }
+    
+    // No fallback - only use real AI
+    console.log('No working API keys available.');
+    throw new Error('API rate limit exceeded or no working API keys. Please try again later or check your API configuration.');
     
   } catch (error) {
     console.error('AI API Error:', error);
-    // Fallback to local AI
-    console.log('Error occurred, using local AI fallback...');
-    const localResponse = generateAIResponse(userMessage, conversationHistory);
-    console.log('Local AI fallback response:', localResponse);
-    return localResponse;
+    throw error;
   }
 }
 
@@ -111,8 +171,8 @@ async function callOpenAI(userMessage, conversationHistory = null) {
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
     
-    // Split response into short and expanded versions
-    const shortResponse = aiResponse.split('.')[0] + '.';
+    // Create better short response
+    const shortResponse = createBetterShortResponse(aiResponse);
     const expandedResponse = aiResponse;
     
     return {
@@ -127,7 +187,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
 }
 
 // Google Gemini integration
-async function callGemini(userMessage, conversationHistory = null) {
+async function callGemini(userMessage, conversationHistory = null, apiConfig = AI_CONFIG.gemini) {
   try {
     let prompt = 'You are a helpful AI assistant. Provide comprehensive, detailed answers that thoroughly explain concepts. Include examples, step-by-step explanations, and relevant details. Your responses should be educational and informative, similar to ChatGPT.\n\n';
     
@@ -142,7 +202,7 @@ async function callGemini(userMessage, conversationHistory = null) {
     // Add current user message
     prompt += `User: ${userMessage}`;
 
-    const response = await fetch(`${AI_CONFIG.gemini.endpoint}?key=${AI_CONFIG.gemini.apiKey}`, {
+    const response = await fetch(`${apiConfig.endpoint}?key=${apiConfig.apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -167,8 +227,8 @@ async function callGemini(userMessage, conversationHistory = null) {
     const data = await response.json();
     const aiResponse = data.candidates[0].content.parts[0].text;
     
-    // Split response into short and expanded versions
-    const shortResponse = aiResponse.split('.')[0] + '.';
+    // Create better short response
+    const shortResponse = createBetterShortResponse(aiResponse);
     const expandedResponse = aiResponse;
     
     return {
@@ -182,7 +242,4 @@ async function callGemini(userMessage, conversationHistory = null) {
   }
 }
 
-// Local AI fallback with improved responses
-export function generateLocalResponse(userMessage, conversationHistory = null) {
-  return generateAIResponse(userMessage, conversationHistory);
-}
+
