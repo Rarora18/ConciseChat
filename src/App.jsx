@@ -356,41 +356,45 @@ function App() {
         <FuturisticBackground />
         
         {/* Modern Sidebar */}
-        {sidebarVisible && (
-          <div className="w-80 flex-shrink-0 relative z-10">
-            <Sidebar 
-              conversations={conversations}
-              currentConversationId={currentConversationId}
-              onConversationSelect={setCurrentConversationId}
-              onNewConversation={createNewConversation}
-              onDeleteConversation={deleteConversation}
-              onToggleSidebar={toggleSidebar}
-            />
-          </div>
-        )}
+        <div className={`flex-shrink-0 relative z-10 transition-all duration-300 ease-in-out transform ${
+          sidebarVisible 
+            ? 'w-80 translate-x-0 opacity-100' 
+            : 'w-0 -translate-x-full opacity-0'
+        }`}>
+          <Sidebar 
+            conversations={conversations}
+            currentConversationId={currentConversationId}
+            onConversationSelect={setCurrentConversationId}
+            onNewConversation={createNewConversation}
+            onDeleteConversation={deleteConversation}
+            onToggleSidebar={toggleSidebar}
+          />
+        </div>
         
-        {/* Sidebar Toggle Button - Only when sidebar is hidden */}
-        {!sidebarVisible && (
-          <button
-            onClick={toggleSidebar}
-            className="fixed top-4 left-4 z-20 p-2 rounded-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/60 shadow-lg hover:shadow-xl transition-all duration-200"
-            title="Show sidebar"
+        {/* Sidebar Toggle Button */}
+        <button
+          onClick={toggleSidebar}
+          className={`fixed top-4 z-20 p-2 rounded-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/60 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform ${
+            sidebarVisible 
+              ? 'left-4 -translate-x-full opacity-0' 
+              : 'left-4 translate-x-0 opacity-100'
+          }`}
+          title={sidebarVisible ? "Hide sidebar" : "Show sidebar"}
+        >
+          <svg 
+            className="w-5 h-5 text-slate-600 dark:text-slate-300 transition-transform duration-300"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
           >
-            <svg 
-              className="w-5 h-5 text-slate-600 dark:text-slate-300 transition-transform duration-200" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        )}
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
         
         {/* Main Chat Area */}
         {showSplitView ? (
           // Split view: Original chat on left, branch on right
-          <div ref={containerRef} className="flex-1 flex relative z-10">
+          <div ref={containerRef} className="flex-1 flex relative z-10 transition-all duration-300 ease-in-out">
             <div 
               className="border-r border-slate-200/60 dark:border-slate-700/60"
               style={{ width: `${splitPosition}%` }}
@@ -432,7 +436,7 @@ function App() {
           </div>
         ) : (
           // Single view: Full width chat
-          <div className="flex-1 relative z-10">
+          <div className="flex-1 relative z-10 transition-all duration-300 ease-in-out">
             <ChatInterface 
               conversation={currentConversation}
               onSendMessage={sendToMainChat}

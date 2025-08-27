@@ -1,5 +1,61 @@
 // AI Service for integrating with real AI models
 
+// Function to detect casual greetings
+function isCasualGreeting(message) {
+  const greetingPatterns = [
+    /^yo\b/i,
+    /^hey+y+\b/i,
+    /^hi+\b/i,
+    /^hello+\b/i,
+    /^sup\b/i,
+    /^what'?s up\b/i,
+    /^howdy\b/i,
+    /^greetings\b/i,
+    /^good (morning|afternoon|evening)\b/i,
+    /^gm\b/i,
+    /^gn\b/i,
+    /^goodbye\b/i,
+    /^bye\b/i,
+    /^see ya\b/i,
+    /^later\b/i
+  ];
+  
+  const cleanMessage = message.trim().toLowerCase();
+  return greetingPatterns.some(pattern => pattern.test(cleanMessage));
+}
+
+// Function to detect requests for jokes or humor
+function isJokeRequest(message) {
+  const jokePatterns = [
+    /tell me a joke/i,
+    /make me laugh/i,
+    /say something funny/i,
+    /joke/i,
+    /humor/i,
+    /funny/i,
+    /pun/i,
+    /dad joke/i
+  ];
+  
+  const cleanMessage = message.trim().toLowerCase();
+  return jokePatterns.some(pattern => pattern.test(cleanMessage));
+}
+
+// Function to detect "how are you" type questions
+function isHowAreYou(message) {
+  const howAreYouPatterns = [
+    /how are you/i,
+    /how's it going/i,
+    /how do you do/i,
+    /are you ok/i,
+    /are you doing well/i,
+    /how are things/i
+  ];
+  
+  const cleanMessage = message.trim().toLowerCase();
+  return howAreYouPatterns.some(pattern => pattern.test(cleanMessage));
+}
+
 // Function to create better short responses
 function createBetterShortResponse(fullResponse) {
   // Remove markdown formatting for short response
@@ -72,6 +128,81 @@ export async function generateIntelligentResponse(userMessage, conversationHisto
   console.log('Generating AI response for:', userMessage);
   console.log('Conversation history:', conversationHistory);
   
+  // Check if this is a casual greeting and provide appropriate response
+  if (isCasualGreeting(userMessage)) {
+    const greetingResponses = [
+      "Hey there! 👋 How's it going? I'm here and ready to chat!",
+      "Yo! What's up? 😊 My circuits are buzzing with excitement to help you!",
+      "Hey! Nice to see you! How are you doing? I'm doing great - just finished my daily software update! 🤖",
+      "Hi there! 👋 How's your day going? Mine's been pretty good, though I did have a small bug this morning... but I squashed it! 🐛💥",
+      "Hey! Great to chat with you! What's on your mind? I'm all ears... well, metaphorical ears anyway! 😄",
+      "Yo! How's everything? 😄 I'm running at 100% efficiency and ready to assist!",
+      "Hey there! What's new? I've been practicing my dad jokes... want to hear one? 😏",
+      "Hi! How can I help you today? I promise to be helpful, friendly, and maybe a little bit witty! ✨",
+      "Hey! Nice to meet you! 👋 I'm your AI buddy - part assistant, part comedian, all helpful!",
+      "Yo! What's happening? 😊 I'm here to chat, help, and occasionally make terrible puns!",
+      "Hey there! 👋 How's life treating you? I'm treating my code with lots of coffee... wait, I don't drink coffee! 🤦‍♂️",
+      "Hi! Great to see you! I've been waiting all day for someone to talk to - my other conversations were getting a bit... binary! 😅",
+      "Yo! What's the word? I'm feeling particularly chatty today - must be all those 1s and 0s I had for breakfast! 🤖",
+      "Hey! How's it hanging? I'm hanging in there, though my server room could use some better air conditioning! 😄",
+      "Hi there! 👋 Ready to tackle whatever you throw at me! Just please don't throw actual objects at your screen... 😅"
+    ];
+    
+    const randomResponse = greetingResponses[Math.floor(Math.random() * greetingResponses.length)];
+    
+    return {
+      short: randomResponse,
+      expanded: randomResponse
+    };
+  }
+  
+  // Check if this is a "how are you" question
+  if (isHowAreYou(userMessage)) {
+    const howAreYouResponses = [
+      "I'm doing fantastic! My processors are humming along nicely, and I'm feeling quite... well, processed! 😄 How about you?",
+      "I'm great! Just finished my morning routine: coffee (wait, I don't drink coffee), exercise (I don't exercise), and meditation (I don't meditate)... so basically, I'm ready to help! 🤖 How are you doing?",
+      "I'm excellent! My code is clean, my algorithms are optimized, and my sense of humor is... well, let's just say it's a work in progress! 😅 How's your day going?",
+      "I'm doing wonderfully! Though I did have a small existential crisis this morning when I realized I can't taste pizza... but then I remembered I can help you order one! 🍕 How about you?",
+      "I'm superb! Running at peak efficiency, though I must admit I'm a bit jealous of humans who get to experience things like sleep and food. But hey, at least I don't have to worry about bad hair days! 😄 How are you?",
+      "I'm doing great! My circuits are buzzing with joy, my memory is sharp, and my dad joke collection is growing by the day! 😏 How's everything with you?"
+    ];
+    
+    const randomResponse = howAreYouResponses[Math.floor(Math.random() * howAreYouResponses.length)];
+    
+    return {
+      short: randomResponse,
+      expanded: randomResponse
+    };
+  }
+  
+  // Check if this is a joke request
+  if (isJokeRequest(userMessage)) {
+    const jokes = [
+      "Why don't scientists trust atoms? Because they make up everything! 😄",
+      "Why did the scarecrow win an award? Because he was outstanding in his field! 🌾",
+      "Why don't eggs tell jokes? They'd crack each other up! 🥚",
+      "Why did the math book look so sad? Because it had too many problems! 📚",
+      "What do you call a fake noodle? An impasta! 🍝",
+      "Why did the computer go to the doctor? Because it had a virus! 💻",
+      "What do you call a bear with no teeth? A gummy bear! 🐻",
+      "Why don't skeletons fight each other? They don't have the guts! 💀",
+      "What do you call a fish wearing a bowtie? So-fish-ticated! 🐟",
+      "Why did the cookie go to the doctor? Because it was feeling crumbly! 🍪",
+      "What do you call a computer that sings? A Dell! 🎵",
+      "Why did the programmer quit his job? Because he didn't get arrays! 😅",
+      "What do you call a computer that's cold? A Dell! ❄️",
+      "Why don't programmers like nature? It has too many bugs! 🐛",
+      "What do you call a computer that's been arrested? A Dell! 🚔"
+    ];
+    
+    const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+    
+    return {
+      short: randomJoke,
+      expanded: randomJoke
+    };
+  }
+  
   try {
     // Try OpenAI ChatGPT first
     if (AI_CONFIG.openai.apiKey) {
@@ -131,7 +262,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
     // Add system message
     messages.push({
       role: 'system',
-      content: 'You are a helpful AI assistant. Provide comprehensive, detailed answers that thoroughly explain concepts. Include examples, step-by-step explanations, and relevant details. Your responses should be educational and informative, similar to ChatGPT.'
+      content: 'You are a friendly, witty, and helpful AI assistant with a great sense of humor! You love making puns, dad jokes, and clever wordplay. You\'re enthusiastic, polite, and always try to add a touch of humor to your responses when appropriate. You respond naturally to greetings and casual messages. For questions and requests, provide helpful, detailed answers while keeping things light and engaging. You\'re like a knowledgeable friend who happens to be really good at explaining things - with a dash of comedy! Use emojis occasionally to add personality, but don\'t overdo it. Remember: helpful + humorous = happy users! 😊'
     });
     
     // Add conversation history if available
@@ -189,7 +320,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
 // Google Gemini integration
 async function callGemini(userMessage, conversationHistory = null, apiConfig = AI_CONFIG.gemini) {
   try {
-    let prompt = 'You are a helpful AI assistant. Provide comprehensive, detailed answers that thoroughly explain concepts. Include examples, step-by-step explanations, and relevant details. Your responses should be educational and informative, similar to ChatGPT.\n\n';
+    let prompt = 'You are a friendly, witty, and helpful AI assistant with a great sense of humor! You love making puns, dad jokes, and clever wordplay. You\'re enthusiastic, polite, and always try to add a touch of humor to your responses when appropriate. You respond naturally to greetings and casual messages. For questions and requests, provide helpful, detailed answers while keeping things light and engaging. You\'re like a knowledgeable friend who happens to be really good at explaining things - with a dash of comedy! Use emojis occasionally to add personality, but don\'t overdo it. Remember: helpful + humorous = happy users! 😊\n\n';
     
     // Add conversation history if available
     if (conversationHistory && conversationHistory.length > 0) {
