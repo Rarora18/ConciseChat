@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { generateId } from './utils/helpers'
 import { generateIntelligentResponse } from './services/aiService'
+import { processFiles, formatFileResultsForAI } from './utils/fileProcessor'
 import Sidebar from './components/Sidebar'
 import ChatInterface from './components/ChatInterface'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -12,6 +13,7 @@ function App() {
   const [branchConversationId, setBranchConversationId] = useState(null) // Track the branch conversation
   const [isLoading, setIsLoading] = useState(false)
   const [branchLoading, setBranchLoading] = useState(false)
+  const [fileProcessing, setFileProcessing] = useState(false)
   const [splitPosition, setSplitPosition] = useState(50) // Percentage for split position
   const [isDragging, setIsDragging] = useState(false)
   const [sidebarVisible, setSidebarVisible] = useState(true)
@@ -294,44 +296,25 @@ function App() {
 
   // Process file attachments for AI analysis
   const processFileAttachments = async (attachments) => {
-    const fileContents = []
-    
-    for (const file of attachments) {
-      try {
-        let content = ''
-        
-        // Handle different file types
-        if (file.type.startsWith('text/') || 
-            file.type.includes('javascript') || 
-            file.type.includes('python') || 
-            file.type.includes('json') || 
-            file.type.includes('xml') || 
-            file.type.includes('csv')) {
-          // Text files - read as text
-          content = await file.text()
-        } else if (file.type.startsWith('image/')) {
-          // Images - describe the image
-          content = `[Image file: ${file.name}, Size: ${(file.size / 1024).toFixed(1)}KB, Type: ${file.type}]`
-        } else if (file.type.includes('pdf')) {
-          // PDFs - note that we can't read PDF content in browser
-          content = `[PDF file: ${file.name}, Size: ${(file.size / 1024).toFixed(1)}KB]`
-        } else if (file.type.includes('zip') || file.type.includes('rar')) {
-          // Archives
-          content = `[Archive file: ${file.name}, Size: ${(file.size / 1024).toFixed(1)}KB]`
-        } else {
-          // Other file types
-          content = `[File: ${file.name}, Size: ${(file.size / 1024).toFixed(1)}KB, Type: ${file.type}]`
-        }
-        
-        fileContents.push(`File: ${file.name}\nType: ${file.type}\nSize: ${(file.size / 1024).toFixed(1)}KB\nContent:\n${content}\n---`)
-        
-      } catch (error) {
-        console.error('Error processing file:', file.name, error)
-        fileContents.push(`File: ${file.name}\nError: Could not read file content`)
-      }
+    try {
+      setFileProcessing(true)
+      console.log('Processing files:', attachments.map(f => f.name))
+      
+      // Process all files using the new file processor
+      const results = await processFiles(attachments)
+      
+      // Format results for AI consumption
+      const formattedContent = formatFileResultsForAI(results)
+      
+      console.log('File processing completed:', results.length, 'files')
+      return formattedContent
+      
+    } catch (error) {
+      console.error('Error processing files:', error)
+      return `Error processing files: ${error.message}`
+    } finally {
+      setFileProcessing(false)
     }
-    
-    return fileContents.join('\n\n')
   }
 
   // Wrapper functions to send messages to specific conversations
@@ -404,7 +387,7 @@ function App() {
                 onSendMessage={sendToMainChat}
                 onBranchConversation={branchConversation}
                 onToggleExpansion={toggleMessageExpansion}
-                isLoading={isLoading}
+                isLoading={isLoading || fileProcessing}
                 isBranchView={false}
               />
             </div>
@@ -428,7 +411,7 @@ function App() {
                 onSendMessage={sendToBranchChat}
                 onBranchConversation={branchConversation}
                 onToggleExpansion={toggleMessageExpansion}
-                isLoading={branchLoading}
+                isLoading={branchLoading || fileProcessing}
                 isBranchView={true}
                 onCloseBranch={closeBranch}
               />
@@ -442,7 +425,7 @@ function App() {
               onSendMessage={sendToMainChat}
               onBranchConversation={branchConversation}
               onToggleExpansion={toggleMessageExpansion}
-              isLoading={isLoading}
+              isLoading={isLoading || fileProcessing}
               isBranchView={false}
             />
           </div>

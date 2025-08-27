@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Paperclip, X } from 'lucide-react'
+import { Send, Paperclip, X, FileText, FileImage, FileSpreadsheet, FileCode } from 'lucide-react'
+import { isFileTypeSupported } from '../utils/fileProcessor'
 
 function MessageInput({ onSendMessage, disabled = false }) {
   const [message, setMessage] = useState('')
@@ -31,6 +32,13 @@ function MessageInput({ onSendMessage, disabled = false }) {
         alert(`File ${file.name} is too large. Maximum size is 10MB.`)
         return false
       }
+      
+      // Check if file type is supported
+      if (!isFileTypeSupported(file.name)) {
+        alert(`File type not supported: ${file.name}. Supported types include PDF, Word, Excel, CSV, text files, and images.`)
+        return false
+      }
+      
       return true
     })
     
@@ -50,9 +58,15 @@ function MessageInput({ onSendMessage, disabled = false }) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  const getFileIcon = (fileType) => {
+  const getFileIcon = (fileType, fileName) => {
+    const ext = fileName.split('.').pop().toLowerCase()
+    
     if (fileType.startsWith('image/')) return '🖼️'
     if (fileType.includes('pdf')) return '📄'
+    if (fileType.includes('word') || ext === 'docx' || ext === 'doc') return '📝'
+    if (fileType.includes('excel') || ext === 'xlsx' || ext === 'xls') return '📊'
+    if (ext === 'csv') return '📈'
+    if (['js', 'ts', 'jsx', 'tsx', 'py', 'java', 'cpp', 'c', 'php', 'rb', 'go', 'rs', 'swift', 'kt', 'html', 'css', 'scss', 'json', 'xml'].includes(ext)) return '💻'
     if (fileType.includes('text') || fileType.includes('code')) return '📝'
     if (fileType.includes('zip') || fileType.includes('rar')) return '📦'
     return '📎'
@@ -73,7 +87,7 @@ function MessageInput({ onSendMessage, disabled = false }) {
         <div className="flex flex-wrap gap-2 p-3 bg-slate-100 rounded-lg border border-slate-200">
           {attachments.map((file, index) => (
             <div key={index} className="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg border border-slate-300 shadow-sm">
-              <span className="text-lg">{getFileIcon(file.type)}</span>
+              <span className="text-lg">{getFileIcon(file.type, file.name)}</span>
               <div className="flex flex-col min-w-0">
                 <span className="text-sm font-medium text-slate-700 truncate max-w-32">
                   {file.name}
@@ -114,7 +128,7 @@ function MessageInput({ onSendMessage, disabled = false }) {
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors disabled:opacity-50"
-            title="Attach files"
+            title="Attach files (PDF, Word, Excel, CSV, text, images)"
           >
             <Paperclip className="w-5 h-5" />
           </button>
@@ -126,7 +140,7 @@ function MessageInput({ onSendMessage, disabled = false }) {
             multiple
             onChange={handleFileSelect}
             className="hidden"
-            accept="*/*"
+            accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.md,.json,.xml,.js,.ts,.jsx,.tsx,.html,.css,.scss,.py,.java,.cpp,.c,.php,.rb,.go,.rs,.swift,.kt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg"
           />
         </div>
         
