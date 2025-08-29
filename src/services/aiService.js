@@ -70,30 +70,30 @@ function createBetterShortResponse(fullResponse) {
   const sentences = cleanResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
   
   if (sentences.length === 0) {
-    return fullResponse.substring(0, 100) + (fullResponse.length > 100 ? '...' : '');
+    return fullResponse.substring(0, 80) + (fullResponse.length > 80 ? '...' : '');
   }
   
-  // Take first 2-3 sentences for better context
-  let shortResponse = '';
-  let totalLength = 0;
-  const maxLength = 200; // Maximum characters for short response
-  
-  for (let i = 0; i < Math.min(3, sentences.length); i++) {
-    const sentence = sentences[i].trim();
-    if (totalLength + sentence.length + 2 <= maxLength) {
-      shortResponse += (shortResponse ? '. ' : '') + sentence;
-      totalLength += sentence.length + 2;
-    } else {
-      break;
-    }
-  }
+  // Take only the first sentence for a truly short response
+  let shortResponse = sentences[0].trim();
   
   // Add period if missing
   if (shortResponse && !shortResponse.endsWith('.') && !shortResponse.endsWith('!') && !shortResponse.endsWith('?')) {
     shortResponse += '.';
   }
   
-  return shortResponse || fullResponse.substring(0, 150) + '...';
+  // If the first sentence is too long, truncate it
+  if (shortResponse.length > 120) {
+    shortResponse = shortResponse.substring(0, 120).trim();
+    // Find the last complete word
+    const lastSpace = shortResponse.lastIndexOf(' ');
+    if (lastSpace > 80) {
+      shortResponse = shortResponse.substring(0, lastSpace) + '...';
+    } else {
+      shortResponse += '...';
+    }
+  }
+  
+  return shortResponse || fullResponse.substring(0, 100) + '...';
 }
 
 // Configuration for different AI providers
@@ -262,7 +262,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
     // Add system message
     messages.push({
       role: 'system',
-      content: 'You are a friendly, witty, and helpful AI assistant with a great sense of humor! You love making puns, dad jokes, and clever wordplay. You\'re enthusiastic, polite, and always try to add a touch of humor to your responses when appropriate. You respond naturally to greetings and casual messages. For questions and requests, provide helpful, detailed answers while keeping things light and engaging. You\'re like a knowledgeable friend who happens to be really good at explaining things - with a dash of comedy! Use emojis occasionally to add personality, but don\'t overdo it. Remember: helpful + humorous = happy users! 😊'
+      content: 'You are a friendly, witty, and helpful AI assistant! For your initial response, provide a concise, direct answer in 1-2 sentences. Be clear and to the point. However, for the expanded response, provide comprehensive, ChatGPT-level detailed explanations including: multiple examples, step-by-step breakdowns, real-world applications, common misconceptions, best practices, related concepts, and thorough context. Think of the expanded response as a complete educational explanation that someone could learn from. Be enthusiastic and occasionally use humor, but prioritize being helpful and comprehensive in expanded responses. Use emojis sparingly. Remember: short and sweet first, incredibly detailed later! 😊'
     });
     
     // Add conversation history if available
@@ -275,10 +275,10 @@ async function callOpenAI(userMessage, conversationHistory = null) {
       });
     }
     
-    // Add current user message
+    // Add current user message with instruction for detailed response
     messages.push({
       role: 'user',
-      content: userMessage
+      content: `${userMessage}\n\nPlease provide a comprehensive, detailed response with examples, explanations, and thorough context.`
     });
 
     const response = await fetch(AI_CONFIG.openai.endpoint, {
@@ -290,7 +290,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
       body: JSON.stringify({
         model: AI_CONFIG.openai.model,
         messages: messages,
-        max_tokens: 1500,
+        max_tokens: 2000,
         temperature: 0.7
       })
     });
@@ -320,7 +320,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
 // Google Gemini integration
 async function callGemini(userMessage, conversationHistory = null, apiConfig = AI_CONFIG.gemini) {
   try {
-    let prompt = 'You are a friendly, witty, and helpful AI assistant with a great sense of humor! You love making puns, dad jokes, and clever wordplay. You\'re enthusiastic, polite, and always try to add a touch of humor to your responses when appropriate. You respond naturally to greetings and casual messages. For questions and requests, provide helpful, detailed answers while keeping things light and engaging. You\'re like a knowledgeable friend who happens to be really good at explaining things - with a dash of comedy! Use emojis occasionally to add personality, but don\'t overdo it. Remember: helpful + humorous = happy users! 😊\n\n';
+    let prompt = 'You are a friendly, witty, and helpful AI assistant! For your initial response, provide a concise, direct answer in 1-2 sentences. Be clear and to the point. However, for the expanded response, provide comprehensive, ChatGPT-level detailed explanations including: multiple examples, step-by-step breakdowns, real-world applications, common misconceptions, best practices, related concepts, and thorough context. Think of the expanded response as a complete educational explanation that someone could learn from. Be enthusiastic and occasionally use humor, but prioritize being helpful and comprehensive in expanded responses. Use emojis sparingly. Remember: short and sweet first, incredibly detailed later! 😊\n\n';
     
     // Add conversation history if available
     if (conversationHistory && conversationHistory.length > 0) {
@@ -330,8 +330,8 @@ async function callGemini(userMessage, conversationHistory = null, apiConfig = A
       prompt += '\n';
     }
     
-    // Add current user message
-    prompt += `User: ${userMessage}`;
+    // Add current user message with instruction for detailed response
+    prompt += `User: ${userMessage}\n\nPlease provide a comprehensive, detailed response with examples, explanations, and thorough context.`;
 
     const response = await fetch(`${apiConfig.endpoint}?key=${apiConfig.apiKey}`, {
       method: 'POST',
@@ -345,7 +345,7 @@ async function callGemini(userMessage, conversationHistory = null, apiConfig = A
           }]
         }],
         generationConfig: {
-          maxOutputTokens: 1500,
+          maxOutputTokens: 2000,
           temperature: 0.7
         }
       })

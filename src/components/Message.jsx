@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Bot, User, ChevronDown, ChevronUp, GitBranch, Clock, Download, Copy, Check } from 'lucide-react'
 import { formatTimestamp } from '../utils/helpers'
 
@@ -7,6 +7,21 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
   const hasExpandedContent = message.expandedContent && message.expandedContent !== message.content
   const hasAttachments = message.attachments && message.attachments.length > 0
   const [copied, setCopied] = useState(false)
+  const [showAnimation, setShowAnimation] = useState(false)
+
+  // Trigger animation for AI messages with expanded content
+  useEffect(() => {
+    if (!isUser && hasExpandedContent && !message.isExpanded) {
+      // Delay the animation to let the message render first
+      const timer = setTimeout(() => {
+        setShowAnimation(true)
+        // Remove animation class after animation completes
+        setTimeout(() => setShowAnimation(false), 3000)
+      }, 1000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [isUser, hasExpandedContent, message.isExpanded])
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes'
@@ -232,7 +247,9 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
               {hasExpandedContent && (
                 <button
                   onClick={() => onToggleExpansion(message.id, conversationId)}
-                  className="btn-ghost px-2 py-1 rounded-lg text-xs font-medium hover-lift"
+                  className={`btn-ghost px-2 py-1 rounded-lg text-xs font-medium hover-lift transition-all duration-300 ${
+                    showAnimation && !message.isExpanded ? 'show-more-attention' : ''
+                  }`}
                 >
                   {message.isExpanded ? (
                     <>

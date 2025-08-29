@@ -6,8 +6,16 @@ function ConversationDiagram({ conversations, currentConversationId, onConversat
   const [expandedBranches, setExpandedBranches] = React.useState(new Set())
 
   // Group conversations by main and branches
-  const mainConversations = conversations.filter(conv => !conv.parentMessageId)
-  const branchConversations = conversations.filter(conv => conv.parentMessageId)
+  const mainConversations = conversations.filter(conv => !conv.parentMessageId && conv.messages)
+  const branchConversations = conversations.filter(conv => conv.parentMessageId && conv.messages)
+  
+  // Debug logging
+  console.log('ConversationDiagram render:', {
+    totalConversations: conversations.length,
+    mainConversations: mainConversations.length,
+    branchConversations: branchConversations.length,
+    currentConversationId
+  })
 
   const toggleBranchExpansion = (mainId) => {
     const newExpanded = new Set(expandedBranches)
@@ -23,7 +31,7 @@ function ConversationDiagram({ conversations, currentConversationId, onConversat
     return branchConversations.filter(branch => {
       // Find the main conversation that this branch was created from
       const mainConv = conversations.find(conv => conv.id === mainId)
-      if (!mainConv) return false
+      if (!mainConv || !mainConv.messages) return false
       
       // Check if this branch was created from any message in the main conversation
       return branch.parentMessageId && mainConv.messages.some(msg => msg.id === branch.parentMessageId)
@@ -35,6 +43,7 @@ function ConversationDiagram({ conversations, currentConversationId, onConversat
       <div className="p-4 text-center text-slate-500">
         <MessageSquare className="w-8 h-8 mx-auto mb-2 text-slate-300" />
         <p className="text-sm">No conversations yet</p>
+        <p className="text-xs text-slate-400 mt-1">Start a conversation to see the diagram</p>
       </div>
     )
   }
@@ -42,8 +51,8 @@ function ConversationDiagram({ conversations, currentConversationId, onConversat
   return (
     <div className="p-4 space-y-3">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-slate-700">Conversation Structure</h3>
-        <div className="text-xs text-slate-500">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Conversation Structure</h3>
+        <div className="text-xs text-slate-500 dark:text-slate-400">
           {mainConversations.length} main • {branchConversations.length} branches
         </div>
       </div>
@@ -63,8 +72,8 @@ function ConversationDiagram({ conversations, currentConversationId, onConversat
                 className={`
                   flex items-center space-x-2 p-2 rounded-lg cursor-pointer transition-all duration-200
                   ${isActive 
-                    ? 'bg-blue-50 border border-blue-200' 
-                    : 'hover:bg-slate-50 border border-transparent hover:border-slate-200'
+                    ? 'bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700/50' 
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-600'
                   }
                 `}
               >
@@ -107,8 +116,8 @@ function ConversationDiagram({ conversations, currentConversationId, onConversat
                         className={`
                           flex items-center space-x-2 p-2 rounded-lg cursor-pointer transition-all duration-200
                           ${isBranchActive 
-                            ? 'bg-green-50 border border-green-200' 
-                            : 'hover:bg-slate-50 border border-transparent hover:border-slate-200'
+                            ? 'bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-700/50' 
+                            : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-600'
                           }
                         `}
                       >
@@ -133,14 +142,14 @@ function ConversationDiagram({ conversations, currentConversationId, onConversat
       </div>
 
       {/* Legend */}
-      <div className="mt-4 pt-4 border-t border-slate-200">
-        <div className="text-xs text-slate-500 space-y-1">
+      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
           <div className="flex items-center space-x-2">
-            <MessageSquare className="w-3 h-3 text-slate-600" />
+            <MessageSquare className="w-3 h-3 text-slate-600 dark:text-slate-400" />
             <span>Main conversation</span>
           </div>
           <div className="flex items-center space-x-2">
-            <GitBranch className="w-3 h-3 text-green-600" />
+            <GitBranch className="w-3 h-3 text-green-600 dark:text-green-400" />
             <span>Branch conversation</span>
           </div>
         </div>

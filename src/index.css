@@ -87,6 +87,11 @@
     animation: scaleIn 0.2s ease-out;
   }
   
+  /* Show more button attention animation */
+  .show-more-attention {
+    animation: showMoreAttention 2s ease-in-out;
+  }
+  
   /* Hover effects */
   .hover-lift {
     @apply transition-transform duration-200 ease-out;
@@ -186,5 +191,23 @@
   40% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes showMoreAttention {
+  0% {
+    background-color: transparent;
+    box-shadow: none;
+    transform: scale(1);
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    transform: scale(1.05);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+    transform: scale(1);
   }
 }

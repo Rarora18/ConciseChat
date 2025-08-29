@@ -1,25 +1,21 @@
 import React, { useState } from 'react'
-import { Plus, MessageSquare, GitBranch, Clock, Network, Sun, Moon, ChevronDown, ChevronRight, X } from 'lucide-react'
+import { Plus, MessageSquare, GitBranch, Clock, Sun, Moon, ChevronDown, ChevronRight, X } from 'lucide-react'
 import { formatDate } from '../utils/helpers'
-import ConversationDiagram from './ConversationDiagram'
 import { useTheme } from '../contexts/ThemeContext'
 
 function Sidebar({ conversations, currentConversationId, onConversationSelect, onNewConversation, onDeleteConversation, onToggleSidebar }) {
-  const [showDiagram, setShowDiagram] = useState(false)
-  const [collapsedConversations, setCollapsedConversations] = useState(new Set())
+  const [expandedBranches, setExpandedBranches] = useState(new Set())
   const [deleteDialog, setDeleteDialog] = useState({ show: false, conversation: null, isMain: false })
   const { isDark, toggleTheme } = useTheme()
 
-  const toggleConversationCollapse = (conversationId) => {
-    setCollapsedConversations(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(conversationId)) {
-        newSet.delete(conversationId)
-      } else {
-        newSet.add(conversationId)
-      }
-      return newSet
-    })
+  const toggleBranchExpansion = (mainId) => {
+    const newExpanded = new Set(expandedBranches)
+    if (newExpanded.has(mainId)) {
+      newExpanded.delete(mainId)
+    } else {
+      newExpanded.add(mainId)
+    }
+    setExpandedBranches(newExpanded)
   }
 
   const getBranchesForMain = (mainId) => {
@@ -77,20 +73,7 @@ function Sidebar({ conversations, currentConversationId, onConversationSelect, o
         </button>
       </div>
 
-      {/* Diagram Toggle Button */}
-      <div className="px-4 pb-2">
-        <button
-          onClick={() => setShowDiagram(!showDiagram)}
-          className={`w-full rounded-xl py-2 px-4 flex items-center justify-center space-x-2 text-sm font-medium transition-all duration-200 ${
-            showDiagram 
-              ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-700/50' 
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:border-slate-700'
-          }`}
-        >
-          <Network className="w-4 h-4" />
-          <span>{showDiagram ? 'Hide Diagram' : 'Show Diagram'}</span>
-        </button>
-      </div>
+
 
       {/* Theme Toggle Button */}
       <div className="px-4 pb-2">
@@ -112,189 +95,124 @@ function Sidebar({ conversations, currentConversationId, onConversationSelect, o
         </button>
       </div>
 
-      {/* Conversations List or Diagram */}
+      {/* Conversations List */}
       <div className="flex-1 overflow-y-auto scrollbar-modern">
-        {showDiagram ? (
-          <ConversationDiagram
-            conversations={conversations}
-            currentConversationId={currentConversationId}
-            onConversationSelect={onConversationSelect}
-            onBranchSelect={onConversationSelect}
-          />
-        ) : (
-          <div className="p-4 space-y-2">
-            {conversations.length === 0 ? (
-              <div className="text-center py-8">
-                <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500 text-sm">No conversations yet</p>
-                <p className="text-slate-400 text-xs mt-1">Start a new chat to begin</p>
-              </div>
-                                                                        ) : (
-                      conversations
-                        .filter(conversation => !conversation.parentMessageId) // Only show main conversations
-                        .map((conversation) => {
-                          const isActive = conversation.id === currentConversationId
-                          const branches = getBranchesForMain(conversation.id)
-                          const hasBranches = branches.length > 0
-                          const isCollapsed = collapsedConversations.has(conversation.id)
+        <div className="p-4 space-y-3">
+          {conversations.length === 0 ? (
+            <div className="text-center py-8">
+              <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500 text-sm">No conversations yet</p>
+              <p className="text-slate-400 text-xs mt-1">Start a new chat to begin</p>
+            </div>
+          ) : (
+            conversations
+              .filter(conversation => !conversation.parentMessageId && conversation.messages) // Only show main conversations
+              .map((conversation) => {
+                const isActive = conversation.id === currentConversationId
+                const branches = getBranchesForMain(conversation.id)
+                const hasBranches = branches.length > 0
+                const isExpanded = expandedBranches.has(conversation.id)
+                
+                return (
+                  <div key={conversation.id} className="space-y-1">
+                    {/* Main Conversation */}
+                    <div
+                      onClick={() => onConversationSelect(conversation.id)}
+                      className={`
+                        flex items-center space-x-2 p-3 rounded-lg cursor-pointer transition-all duration-200
+                        ${isActive 
+                          ? 'bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700/50' 
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-600'
+                        }
+                      `}
+                    >
+                      <MessageSquare className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                          {conversation.title}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          {conversation.messages.length} messages • {formatDate(conversation.updatedAt)}
+                          {hasBranches && (
+                            <span className="text-green-600 dark:text-green-400 ml-1">• {branches.length} branches</span>
+                          )}
+                        </div>
+                      </div>
+                      {hasBranches && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleBranchExpansion(conversation.id)
+                          }}
+                          className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteClick(conversation, true, e)
+                        }}
+                        className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                        title="Delete conversation"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Branches */}
+                    {hasBranches && isExpanded && (
+                      <div className="ml-6 space-y-1">
+                        {branches.map((branch) => {
+                          const isBranchActive = branch.id === currentConversationId
                           
                           return (
-                            <div key={conversation.id} className="space-y-1">
-                              {/* Main Conversation */}
-                              <div
-                                onClick={() => onConversationSelect(conversation.id)}
-                                className={`
-                                  group relative p-4 rounded-xl cursor-pointer transition-all duration-200 ease-out
-                                  ${isActive 
-                                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 shadow-sm' 
-                                    : 'hover:bg-slate-50/80 border border-transparent hover:border-slate-200/60'
-                                  }
-                                  hover-lift
-                                `}
-                              >
-                                <div className="flex items-start space-x-3">
-                                  <div className={`
-                                    w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
-                                    ${isActive 
-                                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' 
-                                      : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
-                                    }
-                                    transition-all duration-200
-                                  `}>
-                                    <MessageSquare className="w-5 h-5" />
-                                  </div>
-                                  
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center space-x-2 mb-1">
-                                      <h3 className={`
-                                        text-base font-medium truncate
-                                        ${isActive ? 'text-slate-800' : 'text-slate-700'}
-                                      `}>
-                                        {conversation.title}
-                                      </h3>
-                                    </div>
-                                    
-                                    <div className="flex items-center justify-between text-xs text-slate-500">
-                                      <div className="flex items-center space-x-2">
-                                        <div className="flex items-center space-x-1">
-                                          <MessageSquare className="w-3 h-3" />
-                                          <span>{conversation.messages.length}</span>
-                                        </div>
-                                        <span>•</span>
-                                        <div className="flex items-center space-x-1">
-                                          <Clock className="w-3 h-3" />
-                                          <span>{formatDate(conversation.updatedAt)}</span>
-                                        </div>
-                                        {hasBranches && (
-                                          <>
-                                            <span>•</span>
-                                            <span className="text-green-600">{branches.length} branches</span>
-                                          </>
-                                        )}
-                                      </div>
-                                      <div className="flex items-center space-x-1">
-                                        {hasBranches && (
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              toggleConversationCollapse(conversation.id)
-                                            }}
-                                            className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
-                                          >
-                                            {isCollapsed ? (
-                                              <ChevronRight className="w-4 h-4" />
-                                            ) : (
-                                              <ChevronDown className="w-4 h-4" />
-                                            )}
-                                          </button>
-                                        )}
-                                        <button
-                                          onClick={(e) => handleDeleteClick(conversation, true, e)}
-                                          className="p-1 text-slate-400 hover:text-red-600 transition-colors"
-                                          title="Delete conversation"
-                                        >
-                                          <X className="w-4 h-4" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
+                            <div
+                              key={branch.id}
+                              onClick={() => onConversationSelect(branch.id)}
+                              className={`
+                                flex items-center space-x-2 p-2 rounded-lg cursor-pointer transition-all duration-200
+                                ${isBranchActive 
+                                  ? 'bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-700/50' 
+                                  : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-600'
+                                }
+                              `}
+                            >
+                              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                              <GitBranch className="w-4 h-4 text-green-600 dark:text-green-400" />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                                  {branch.title}
+                                </div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400">
+                                  {branch.messages.length} messages • {formatDate(branch.updatedAt)}
                                 </div>
                               </div>
-
-                              {/* Branch Conversations */}
-                              {hasBranches && !isCollapsed && (
-                                <div className="ml-4 space-y-1">
-                                  {branches.map((branch) => {
-                                    const isBranchActive = branch.id === currentConversationId
-                                    
-                                    return (
-                                      <div
-                                        key={branch.id}
-                                        onClick={() => onConversationSelect(branch.id)}
-                                        className={`
-                                          group relative p-3 rounded-lg cursor-pointer transition-all duration-200 ease-out
-                                          ${isBranchActive 
-                                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/60 shadow-sm' 
-                                            : 'hover:bg-slate-50/80 border border-transparent hover:border-slate-200/60'
-                                          }
-                                          hover-lift
-                                        `}
-                                      >
-                                        <div className="flex items-start space-x-2">
-                                          <div className={`
-                                            w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0
-                                            ${isBranchActive 
-                                              ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' 
-                                              : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
-                                            }
-                                            transition-all duration-200
-                                          `}>
-                                            <GitBranch className="w-3 h-3" />
-                                          </div>
-                                          
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center space-x-2 mb-1">
-                                              <h4 className={`
-                                                text-sm font-medium truncate
-                                                ${isBranchActive ? 'text-slate-800' : 'text-slate-700'}
-                                              `}>
-                                                {branch.title}
-                                              </h4>
-                                            </div>
-                                            
-                                            <div className="flex items-center justify-between text-xs text-slate-500">
-                                              <div className="flex items-center space-x-2">
-                                                <div className="flex items-center space-x-1">
-                                                  <GitBranch className="w-3 h-3" />
-                                                  <span>{branch.messages.length}</span>
-                                                </div>
-                                                <span>•</span>
-                                                <div className="flex items-center space-x-1">
-                                                  <Clock className="w-3 h-3" />
-                                                  <span>{formatDate(branch.updatedAt)}</span>
-                                                </div>
-                                              </div>
-                                              <button
-                                                onClick={(e) => handleDeleteClick(branch, false, e)}
-                                                className="p-1 text-slate-400 hover:text-red-600 transition-colors"
-                                                title="Delete branch"
-                                              >
-                                                <X className="w-3 h-3" />
-                                              </button>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteClick(branch, false, e)
+                                }}
+                                className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                                title="Delete branch"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
                             </div>
                           )
-                        })
-            )}
-          </div>
-        )}
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+          )}
+        </div>
       </div>
 
       {/* Footer */}
