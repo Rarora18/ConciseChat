@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Bot, User, ChevronDown, ChevronUp, GitBranch, Clock, Download, Copy, Check } from 'lucide-react'
 import { formatTimestamp } from '../utils/helpers'
+import CodeBlock from './CodeBlock'
 
 function Message({ message, onBranch, onToggleExpansion, isBranchView = false, conversationId }) {
   const isUser = message.role === 'user'
@@ -66,87 +67,116 @@ function Message({ message, onBranch, onToggleExpansion, isBranchView = false, c
   const formatExpandedContent = (content) => {
     if (!content) return content
     
-    // Split content into lines
-    const lines = content.split('\n')
+    // Check for code blocks first
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g
+    const parts = []
+    let lastIndex = 0
+    let match
     
-    return lines.map((line, index) => {
-      const trimmedLine = line.trim()
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+      // Add text before code block
+      if (match.index > lastIndex) {
+        const textBefore = content.slice(lastIndex, match.index)
+        parts.push({ type: 'text', content: textBefore })
+      }
       
-      // Main headings (lines that start with #)
-      if (trimmedLine.startsWith('#')) {
-        const level = trimmedLine.match(/^#+/)[0].length
-        const text = trimmedLine.replace(/^#+\s*/, '')
+      // Add code block
+      const language = match[1] || 'javascript'
+      const code = match[2].trim()
+      parts.push({ type: 'code', language, code })
+      
+      lastIndex = match.index + match[0].length
+    }
+    
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push({ type: 'text', content: content.slice(lastIndex) })
+    }
+    
+    return parts.map((part, index) => {
+      if (part.type === 'code') {
+        return (
+          <CodeBlock
+            key={index}
+            code={part.code}
+            language={part.language}
+          />
+        )
+      } else {
+        // Process text content for headings and formatting
+        const lines = part.content.split('\n')
         
-        if (level === 1) {
-          return (
-            <div key={index} className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 mt-6 first:mt-0 border-b border-slate-300 dark:border-slate-600 pb-2">
-              {text}
-            </div>
-          )
-        } else if (level === 2) {
-          return (
-            <div key={index} className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 mt-5">
-              {text}
-            </div>
-          )
-        } else {
-          return (
-            <div key={index} className="text-base font-medium text-slate-800 dark:text-slate-200 mb-2 mt-4">
-              {text}
-            </div>
-          )
-        }
+        return lines.map((line, lineIndex) => {
+          const trimmedLine = line.trim()
+          
+          // Main headings (lines that start with #)
+          if (trimmedLine.startsWith('#')) {
+            const level = trimmedLine.match(/^#+/)[0].length
+            const text = trimmedLine.replace(/^#+\s*/, '')
+            
+            if (level === 1) {
+              return (
+                <div key={`${index}-${lineIndex}`} className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 mt-6 first:mt-0 border-b border-slate-300 dark:border-slate-600 pb-2">
+                  {text}
+                </div>
+              )
+            } else if (level === 2) {
+              return (
+                <div key={`${index}-${lineIndex}`} className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 mt-5">
+                  {text}
+                </div>
+              )
+            } else {
+              return (
+                <div key={`${index}-${lineIndex}`} className="text-base font-medium text-slate-800 dark:text-slate-200 mb-2 mt-4">
+                  {text}
+                </div>
+              )
+            }
+          }
+          
+          // Bold text (wrapped in **)
+          if (trimmedLine.includes('**')) {
+            const parts = trimmedLine.split(/(\*\*.*?\*\*)/g)
+            return (
+              <div key={`${index}-${lineIndex}`} className="text-sm text-slate-700 dark:text-slate-300 mb-2 leading-relaxed">
+                {parts.map((part, partIndex) => {
+                  if (part.startsWith('**') && part.endsWith('**')) {
+                    return (
+                      <span key={partIndex} className="font-bold text-slate-900 dark:text-slate-100">
+                        {part.slice(2, -2)}
+                      </span>
+                    )
+                  }
+                  return part
+                })}
+              </div>
+            )
+          }
+          
+          // Bullet points or numbered lists
+          if (trimmedLine.match(/^[\-\*•]\s/) || trimmedLine.match(/^\d+\.\s/)) {
+            return (
+              <div key={`${index}-${lineIndex}`} className="text-sm text-slate-700 dark:text-slate-300 mb-1 ml-4 flex items-start">
+                <span className="mr-2 text-slate-500">•</span>
+                <span>{trimmedLine.replace(/^[\-\*•]\s/, '').replace(/^\d+\.\s/, '')}</span>
+              </div>
+            )
+          }
+          
+          // Regular paragraphs
+          if (trimmedLine.length > 0) {
+            return (
+              <div key={`${index}-${lineIndex}`} className="text-sm text-slate-700 dark:text-slate-300 mb-3 leading-relaxed">
+                {trimmedLine}
+              </div>
+            )
+          }
+          
+          // Empty lines
+          return <div key={`${index}-${lineIndex}`} className="h-3"></div>
+        })
       }
-      
-      // Bold text (wrapped in **)
-      if (trimmedLine.includes('**')) {
-        const parts = trimmedLine.split(/(\*\*.*?\*\*)/g)
-        return (
-          <div key={index} className="text-sm text-slate-700 dark:text-slate-300 mb-2 leading-relaxed">
-            {parts.map((part, partIndex) => {
-              if (part.startsWith('**') && part.endsWith('**')) {
-                return (
-                  <span key={partIndex} className="font-bold text-slate-900 dark:text-slate-100">
-                    {part.slice(2, -2)}
-                  </span>
-                )
-              }
-              return part
-            })}
-          </div>
-        )
-      }
-      
-      // Bullet points or numbered lists
-      if (trimmedLine.match(/^[\-\*•]\s/) || trimmedLine.match(/^\d+\.\s/)) {
-        return (
-          <div key={index} className="text-sm text-slate-700 dark:text-slate-300 mb-1 ml-4 flex items-start">
-            <span className="mr-2 text-slate-500">•</span>
-            <span>{trimmedLine.replace(/^[\-\*•]\s/, '').replace(/^\d+\.\s/, '')}</span>
-          </div>
-        )
-      }
-      
-      // Code blocks (lines wrapped in backticks)
-      if (trimmedLine.startsWith('```') || trimmedLine.startsWith('    ') || trimmedLine.startsWith('\t')) {
-        return (
-          <div key={index} className="text-sm font-mono bg-slate-200 dark:bg-slate-700 p-3 rounded mb-3 border-l-4 border-blue-500">
-            {trimmedLine.replace(/^```/, '').replace(/```$/, '').replace(/^    /, '')}
-          </div>
-        )
-      }
-      
-      // Regular paragraphs
-      if (trimmedLine.length > 0) {
-        return (
-          <div key={index} className="text-sm text-slate-700 dark:text-slate-300 mb-3 leading-relaxed">
-            {trimmedLine}
-          </div>
-        )
-      }
-      
-      // Empty lines
-      return <div key={index} className="h-3"></div>
     })
   }
 

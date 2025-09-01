@@ -70,30 +70,49 @@ function createBetterShortResponse(fullResponse) {
   const sentences = cleanResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
   
   if (sentences.length === 0) {
-    return fullResponse.substring(0, 80) + (fullResponse.length > 80 ? '...' : '');
+    return fullResponse.substring(0, 100) + (fullResponse.length > 100 ? '...' : '');
   }
   
-  // Take only the first sentence for a truly short response
-  let shortResponse = sentences[0].trim();
+  // Try to find a good short response by looking at the first few sentences
+  let shortResponse = '';
+  let totalLength = 0;
+  const maxLength = 150; // Slightly longer to allow for better context
+  
+  for (let i = 0; i < Math.min(2, sentences.length); i++) {
+    const sentence = sentences[i].trim();
+    if (sentence.length < 10) continue; // Skip very short sentences
+    
+    if (totalLength + sentence.length + 2 <= maxLength) {
+      shortResponse += (shortResponse ? ' ' : '') + sentence;
+      totalLength += sentence.length + 2;
+    } else {
+      break;
+    }
+  }
+  
+  // If we still don't have a good response, just take the first meaningful sentence
+  if (!shortResponse || shortResponse.length < 20) {
+    shortResponse = sentences.find(s => s.trim().length > 20) || sentences[0] || '';
+  }
   
   // Add period if missing
   if (shortResponse && !shortResponse.endsWith('.') && !shortResponse.endsWith('!') && !shortResponse.endsWith('?')) {
     shortResponse += '.';
   }
   
-  // If the first sentence is too long, truncate it
-  if (shortResponse.length > 120) {
-    shortResponse = shortResponse.substring(0, 120).trim();
+  // If the response is still too long, truncate it intelligently
+  if (shortResponse.length > 150) {
+    shortResponse = shortResponse.substring(0, 150).trim();
     // Find the last complete word
     const lastSpace = shortResponse.lastIndexOf(' ');
-    if (lastSpace > 80) {
+    if (lastSpace > 100) {
       shortResponse = shortResponse.substring(0, lastSpace) + '...';
     } else {
       shortResponse += '...';
     }
   }
   
-  return shortResponse || fullResponse.substring(0, 100) + '...';
+  return shortResponse || fullResponse.substring(0, 120) + '...';
 }
 
 // Configuration for different AI providers
@@ -262,7 +281,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
     // Add system message
     messages.push({
       role: 'system',
-      content: 'You are a friendly, witty, and helpful AI assistant! For your initial response, provide a concise, direct answer in 1-2 sentences. Be clear and to the point. However, for the expanded response, provide comprehensive, ChatGPT-level detailed explanations including: multiple examples, step-by-step breakdowns, real-world applications, common misconceptions, best practices, related concepts, and thorough context. Think of the expanded response as a complete educational explanation that someone could learn from. Be enthusiastic and occasionally use humor, but prioritize being helpful and comprehensive in expanded responses. Use emojis sparingly. Remember: short and sweet first, incredibly detailed later! 😊'
+      content: 'You are a friendly, witty, and helpful AI assistant! Provide a clear, complete answer in 1-2 sentences that directly addresses the question. This should be a standalone response that makes sense on its own. Then, in the expanded response, provide comprehensive, ChatGPT-level detailed explanations including: multiple examples, step-by-step breakdowns, real-world applications, common misconceptions, best practices, related concepts, and thorough context. When providing code examples, always use proper markdown code blocks with language specification (e.g., ```javascript, ```python, ```html, etc.) for syntax highlighting. Think of the expanded response as a complete educational explanation that someone could learn from. Be enthusiastic and occasionally use humor, but prioritize being helpful and comprehensive in expanded responses. Use emojis sparingly. Remember: clear and complete first, incredibly detailed later! 😊'
     });
     
     // Add conversation history if available
@@ -320,7 +339,7 @@ async function callOpenAI(userMessage, conversationHistory = null) {
 // Google Gemini integration
 async function callGemini(userMessage, conversationHistory = null, apiConfig = AI_CONFIG.gemini) {
   try {
-    let prompt = 'You are a friendly, witty, and helpful AI assistant! For your initial response, provide a concise, direct answer in 1-2 sentences. Be clear and to the point. However, for the expanded response, provide comprehensive, ChatGPT-level detailed explanations including: multiple examples, step-by-step breakdowns, real-world applications, common misconceptions, best practices, related concepts, and thorough context. Think of the expanded response as a complete educational explanation that someone could learn from. Be enthusiastic and occasionally use humor, but prioritize being helpful and comprehensive in expanded responses. Use emojis sparingly. Remember: short and sweet first, incredibly detailed later! 😊\n\n';
+    let prompt = 'You are a friendly, witty, and helpful AI assistant! Provide a clear, complete answer in 1-2 sentences that directly addresses the question. This should be a standalone response that makes sense on its own. Then, in the expanded response, provide comprehensive, ChatGPT-level detailed explanations including: multiple examples, step-by-step breakdowns, real-world applications, common misconceptions, best practices, related concepts, and thorough context. When providing code examples, always use proper markdown code blocks with language specification (e.g., ```javascript, ```python, ```html, etc.) for syntax highlighting. Think of the expanded response as a complete educational explanation that someone could learn from. Be enthusiastic and occasionally use humor, but prioritize being helpful and comprehensive in expanded responses. Use emojis sparingly. Remember: clear and complete first, incredibly detailed later! 😊\n\n';
     
     // Add conversation history if available
     if (conversationHistory && conversationHistory.length > 0) {

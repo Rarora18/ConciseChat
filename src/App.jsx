@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar'
 import ChatInterface from './components/ChatInterface'
 import { ThemeProvider } from './contexts/ThemeContext'
 import FuturisticBackground from './components/FuturisticBackground'
+import TestCodeBlock from './components/TestCodeBlock'
 
 function App() {
   const [conversations, setConversations] = useState([])
@@ -83,7 +84,19 @@ function App() {
       // Process file attachments for AI analysis
       let fileContent = ''
       if (attachments && attachments.length > 0) {
-        fileContent = await processFileAttachments(attachments)
+        try {
+          const fileTimeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('File processing timeout')), 15000) // 15 second timeout
+          )
+          
+          fileContent = await Promise.race([
+            processFileAttachments(attachments),
+            fileTimeoutPromise
+          ])
+        } catch (error) {
+          console.error('File processing error:', error)
+          fileContent = `Error processing files: ${error.message}`
+        }
       }
       
       // Prepare conversation history for AI context
@@ -107,7 +120,18 @@ function App() {
       try {
         // Generate AI response with conversation history
         const fullContent = fileContent ? `${content}\n\nAttached files:\n${fileContent}` : content
-        const aiResponse = await generateIntelligentResponse(fullContent, conversationHistory)
+        console.log('Generating AI response for:', fullContent.substring(0, 100) + '...')
+        
+        // Add timeout to prevent stuck loading state
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('AI response timeout')), 30000) // 30 second timeout
+        )
+        
+        const aiResponse = await Promise.race([
+          generateIntelligentResponse(fullContent, conversationHistory),
+          timeoutPromise
+        ])
+        console.log('AI response received:', aiResponse)
         
         if (!aiResponse || !aiResponse.short) {
           throw new Error('Invalid AI response received')
@@ -138,11 +162,15 @@ function App() {
         // Add error message to conversation
         const errorMessage = {
           id: generateId(),
-          content: 'Sorry, I encountered an error while processing your request. Please try again.',
+          content: error.message === 'AI response timeout' 
+            ? 'Sorry, the response took too long. Please try again.'
+            : 'Sorry, I encountered an error while processing your request. Please try again.',
           role: 'assistant',
           timestamp: new Date(),
           conversationId: actualTargetId,
-          expandedContent: 'Sorry, I encountered an error while processing your request. Please try again.'
+          expandedContent: error.message === 'AI response timeout'
+            ? 'The AI response timed out after 30 seconds. This could be due to a complex request, network issues, or API rate limits. Please try breaking down your question into smaller parts or try again later.'
+            : 'Sorry, I encountered an error while processing your request. Please try again.'
         }
         
         setConversations(prev => prev.map(conv => 
@@ -156,6 +184,7 @@ function App() {
         ))
       } finally {
         // Always clear loading state
+        console.log('Clearing loading state for conversation:', actualTargetId)
         if (actualTargetId === currentConversationId) {
           setIsLoading(false)
         } else if (actualTargetId === branchConversationId) {
@@ -373,6 +402,11 @@ function App() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
+        
+        {/* Test Code Block - Temporary */}
+        <div className="fixed top-20 right-4 z-30">
+          <TestCodeBlock />
+        </div>
         
         {/* Main Chat Area */}
         {showSplitView ? (
