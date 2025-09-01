@@ -6,7 +6,7 @@ import Sidebar from './components/Sidebar'
 import ChatInterface from './components/ChatInterface'
 import { ThemeProvider } from './contexts/ThemeContext'
 import FuturisticBackground from './components/FuturisticBackground'
-import TestCodeBlock from './components/TestCodeBlock'
+
 
 function App() {
   const [conversations, setConversations] = useState([])
@@ -403,10 +403,7 @@ function App() {
           </svg>
         </button>
         
-        {/* Test Code Block - Temporary */}
-        <div className="fixed top-20 right-4 z-30">
-          <TestCodeBlock />
-        </div>
+
         
         {/* Main Chat Area */}
         {showSplitView ? (
